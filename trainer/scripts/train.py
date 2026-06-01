@@ -1,5 +1,6 @@
 import ast
 import json
+import pickle
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -76,7 +77,7 @@ vectors = svd.fit_transform(tfidf_matrix)
 # 4. L2-normalize so cosine similarity == dot product downstream
 vectors = normalize(vectors)
 
-out = Path("../runtime/server/model")
+out = Path("../runtime/model")
 out.mkdir(exist_ok=True)
 
 # 5. Serialize — binary float32 for fast loading, IDs as a sidecar JSON
@@ -85,7 +86,21 @@ ids = [int(df["id"].iloc[i]) for i in range(len(df))]
 with open(out / "movie_ids.json", "w") as f:
     json.dump(ids, f)
 
-# 6. Export transform artifacts for runtime vector computation
+metadata = {
+    "n_components": svd.n_components,
+    "n_features": len(vectorizer.vocabulary_),
+    "n_movies": len(df),
+}
+with open(out / "metadata.json", "w") as f:
+    json.dump(metadata, f)
+
+# 6. Pickle fitted sklearn objects for use by the Python server
+with open(out / "vectorizer.pkl", "wb") as f:
+    pickle.dump(vectorizer, f)
+with open(out / "svd.pkl", "wb") as f:
+    pickle.dump(svd, f)
+
+# 7. Export transform artifacts for runtime vector computation
 # Vocabulary must be JSON since keys are strings; weights and components are binary float32
 with open(out / "vocabulary.json", "w") as f:
     json.dump({k: int(v) for k, v in vectorizer.vocabulary_.items()}, f)
