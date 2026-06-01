@@ -69,11 +69,16 @@ Then visit http://localhost:3000/ to see the dev app. Changes to both the fronte
 
 ### Trainer
 
-If you'd like to run the trainer yourself, you'll need the [TMDB dataset](https://www.kaggle.com/datasets/alanvourch/tmdb-movies-daily-updates) saved under `trainer/dataset/TMDB_all_movies.csv`.
+If you'd like to run the trainer yourself, first run the prep data script. This will automatically download the movie dataset from Kaggle if it's missing:
 
 ```bash
 uv run trainer/scripts/prep_data.py
+```
+
+Then run the training script:
+
+```bash
 uv run trainer/scripts/train.py
 ```
 
-`prep_data.py` filters `TMDB_all_movies.csv` down to `TMDB_reduced.csv`. `train.py` then produces the model artifacts in `runtime/model/`.
+The training script will produce run time files that will be used by the recommendation endpoint.
