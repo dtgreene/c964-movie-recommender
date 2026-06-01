@@ -1,1 +1,20 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+body {
+  @apply p-8;
+}
+
+.loader {
+  @apply border-4 border-sky-600 inline-block box-border w-12 h-12 border-b-transparent;
+  border-radius: 50%;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

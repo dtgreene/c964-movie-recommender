@@ -46,7 +46,7 @@ uv run scripts/prep_data.py
 uv run scripts/train.py
 ```
 
-`prep_data.py` filters `TMDB_all_movies.csv` down to `TMDB_reduced.csv`. `train.py` then produces `movie_vectors.bin`, `movie_ids.json`, `tfidf.joblib`, and `svd.joblib` in `runtime/server/model/`.
+`prep_data.py` filters `TMDB_all_movies.csv` down to `TMDB_reduced.csv`. `train.py` then produces `movie_vectors.bin` and `movie_ids.json` in `runtime/server/model/`. These are used by the Fastify server to perform recommendations.
 
 ### Runtime
 
@@ -61,8 +61,5 @@ The runtime is a Fastify server that serves the React frontend and exposes `/api
 ```bash
 cd runtime
 npm install
-npm run dev:server
-
-# In a separate terminal
-npm run dev:client
+npm run dev
 ```

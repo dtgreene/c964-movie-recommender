@@ -1,16 +1,11 @@
 import ast
 import json
-import joblib
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import normalize
-
-"""
-5,Four Rooms,5.9,2828.0,Released,1995-12-09,4257354.0,98.0,4000000.0,tt0113101,en,Four Rooms,It's Ted the Bellhop's first night on the job...and the hotel's very unusual guests are about to place him in some outrageous predicaments. It seems that this evening's room service is serving up one unbelievable happening after another.,3.4324,"Twelve outrageous guests. Four scandalous requests. And one lone bellhop, in his first day on the job, who's in for the wildest New year's Eve of his life.",Comedy,"Miramax, A Band Apart",United States of America,English,"Tamlyn Tomita, Lana McKissack, Quinn Hellerman, Ione Skye, Quentin Tarantino, Antonio Banderas, Salma Hayek Pinault, Sammi Davis, Laura Rush, Madonna, Jennifer Beals, Amanda de Cadenet, Paul Skemp, Paul Calderon, David Proval, Kathy Griffin, Marisa Tomei, Marc Lawrence, Lawrence Bender, Alicia Witt, Bruce Willis, Valeria Golino, Tim Roth, Danny Verduzco, Patricia Vonne, Unruly Julie McClean, Kimberly Blair, Lili Taylor","Quentin Tarantino, Allison Anders, Robert Rodriguez, Alexandre Rockwell","Phil Parmet, Guillermo Navarro, Rodrigo García, Andrzej Sekula","Quentin Tarantino, Allison Anders, Robert Rodriguez, Alexandre Rockwell","Quentin Tarantino, Lawrence Bender, Alexandre Rockwell",Combustible Edison,6.7,117016.0,/75aHn1NOYXh4M7L5shoeQ6NGykP.jpg
-"""
 
 """
 id
@@ -90,6 +85,12 @@ ids = [int(df["id"].iloc[i]) for i in range(len(df))]
 with open(out / "movie_ids.json", "w") as f:
     json.dump(ids, f)
 
-# 6. Save fitted models for transforming new movies later
-joblib.dump(vectorizer, out / "tfidf.joblib")
-joblib.dump(svd, out / "svd.joblib")
+# 6. Export transform artifacts for runtime vector computation
+# Vocabulary must be JSON since keys are strings; weights and components are binary float32
+with open(out / "vocabulary.json", "w") as f:
+    json.dump({k: int(v) for k, v in vectorizer.vocabulary_.items()}, f)
+
+vectorizer.idf_.astype(np.float32).tofile(out / "idf_weights.bin")
+
+# Shape: (n_components x n_features) = (100 x 5000), row-major
+svd.components_.astype(np.float32).tofile(out / "svd_components.bin")

@@ -1,4 +1,7 @@
 {
   "python.defaultInterpreterPath": "${workspaceFolder}/trainer/.venv/bin/python",
-  "python.useEnvironmentsExtension": true
+  "python.useEnvironmentsExtension": true,
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
 }
