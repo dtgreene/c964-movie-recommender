@@ -6,7 +6,7 @@ export default defineConfig({
   root: './runtime/client',
   plugins: [react(), tailwindcss()],
   build: {
-    outDir: '../server-py/public',
+    outDir: '../server/public',
     emptyOutDir: true,
   },
   server: {

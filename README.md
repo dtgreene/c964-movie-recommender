@@ -54,7 +54,7 @@ TMDB_READ_ACCESS_TOKEN=your_token_here
 Start the API server (port 8080):
 
 ```bash
-uv run uvicorn main:app --reload --app-dir runtime/server-py
+uv run uvicorn main:app --reload --app-dir runtime/server
 ```
 
 Start the client dev server (port 3000):

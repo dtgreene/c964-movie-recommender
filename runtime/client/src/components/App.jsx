@@ -23,13 +23,13 @@ const Tabs = Object.freeze({
   RECOMMENDATIONS: 'recommendations',
 });
 
-const TabPanel = ({ children, isActive }) => (
+const TabPanel = ({ render, isActive }) => (
   <div
     className={cn('max-w-240 my-12 flex-1', {
       hidden: !isActive,
     })}
   >
-    {children}
+    {render({ isActive })}
   </div>
 );
 
@@ -112,18 +112,22 @@ export const App = () => {
             </TabButton>
           </div>
           <div className="flex justify-center">
-            <TabPanel isActive={tab === Tabs.POPULAR}>
-              <PopularTab />
-            </TabPanel>
-            <TabPanel isActive={tab === Tabs.SEARCH}>
-              <SearchTab />
-            </TabPanel>
-            <TabPanel isActive={tab === Tabs.MY_STUFF}>
-              <MyStuffTab />
-            </TabPanel>
-            <TabPanel isActive={tab === Tabs.RECOMMENDATIONS}>
-              <RecommendationsTab />
-            </TabPanel>
+            <TabPanel
+              isActive={tab === Tabs.POPULAR}
+              render={(props) => <PopularTab {...props} />}
+            />
+            <TabPanel
+              isActive={tab === Tabs.SEARCH}
+              render={(props) => <SearchTab {...props} />}
+            />
+            <TabPanel
+              isActive={tab === Tabs.MY_STUFF}
+              render={(props) => <MyStuffTab {...props} />}
+            />
+            <TabPanel
+              isActive={tab === Tabs.RECOMMENDATIONS}
+              render={(props) => <RecommendationsTab {...props} />}
+            />
           </div>
         </div>
       </div>

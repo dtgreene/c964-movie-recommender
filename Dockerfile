@@ -23,8 +23,8 @@ RUN uv sync
 COPY docker-download-model.sh ./
 RUN sh docker-download-model.sh
 
-COPY runtime/server-py ./runtime/server-py
-COPY --from=builder /app/runtime/server-py/public ./runtime/server-py/public
+COPY runtime/server ./runtime/server
+COPY --from=builder /app/runtime/server/public ./runtime/server/public
 
 EXPOSE 8080
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--app-dir", "runtime/server-py"]
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--app-dir", "runtime/server"]

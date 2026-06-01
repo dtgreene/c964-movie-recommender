@@ -55,13 +55,13 @@ export const MovieThumbnail = ({
             onClick={handleThumbsUp}
             className="bg-emerald-500/75 hover:bg-emerald-500 text-white rounded-full p-3 not-disabled:cursor-pointer transition-colors"
           >
-            <ThumbsUpIcon size="32" />
+            <ThumbsUpIcon size="24" />
           </button>
           <button
             onClick={handleThumbsDown}
             className="bg-rose-500/75 hover:bg-rose-500 text-white rounded-full p-3 not-disabled:cursor-pointer transition-colors"
           >
-            <ThumbsDownIcon size="32" />
+            <ThumbsDownIcon size="24" />
           </button>
         </div>
       </div>

@@ -5,7 +5,7 @@ import axios from 'axios';
 import { MovieResults } from './MovieResults';
 import { cn } from '../utils';
 
-export const PopularTab = () => {
+export const PopularTab = ({ isActive }) => {
   const [params, setParams] = useState({ key: 'trending', page: 1 });
   const { data, isPending } = useQuery({
     queryKey: [params.key],
@@ -13,6 +13,7 @@ export const PopularTab = () => {
       const response = await axios.get(`/api/${params.key}`);
       return response.data.results;
     },
+    enabled: isActive,
   });
 
   const isTrending = params.key === 'trending';

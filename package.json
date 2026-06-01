@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev:client": "vite",
-    "dev:server": "uv run uvicorn main:app --reload --app-dir runtime/server-py",
+    "dev:server": "uv run uvicorn main:app --reload --app-dir runtime/server --port 8080",
     "build": "vite build"
   },
   "license": "ISC",
@@ -13,6 +13,7 @@
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/react-query": "^5.100.14",
     "@vitejs/plugin-react": "^6.0.2",
+    "axios": "^1.16.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.17.0",
     "react": "^19.2.6",

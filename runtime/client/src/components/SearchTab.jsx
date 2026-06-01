@@ -19,7 +19,7 @@ import { MovieResults } from './MovieResults';
  * calculation to negatively influence certain movies.
  */
 
-export const SearchTab = () => {
+export const SearchTab = ({ isActive }) => {
   const [params, setParams] = useState({ query: '', page: 1 });
 
   const { data, isPending } = useQuery({
@@ -30,7 +30,7 @@ export const SearchTab = () => {
 
       return response.data.results;
     },
-    enabled: !!params.query,
+    enabled: !!params.query && isActive,
   });
 
   const handleSubmit = (event) => {

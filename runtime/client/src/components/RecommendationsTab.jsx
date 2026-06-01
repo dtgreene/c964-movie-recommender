@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { groupByRating, userState } from '../store';
 
-export const RecommendationsTab = () => {
+export const RecommendationsTab = ({ isActive }) => {
   const userSnap = useSnapshot(userState);
   const { liked, disliked } = groupByRating(userSnap);
   const movieIds = liked
@@ -23,6 +23,6 @@ export const RecommendationsTab = () => {
       const response = await axios.get(`/api/recommendations?${params}`);
       return response.data;
     },
-    enabled: movieIds.length < 5,
+    enabled: movieIds.length >= 5 && isActive,
   });
 };
