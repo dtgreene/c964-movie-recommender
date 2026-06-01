@@ -8,9 +8,9 @@ To simply run the app, create a `docker-compose.yml` file like the following:
 services:
   c964-movie-recommender:
     build:
-      context: https://github.com/dtgreene/c964-movie-recommender.git#main:runtime
+      context: https://github.com/dtgreene/c964-movie-recommender.git#main
     ports:
-      - "8080:8080"
+      - '8080:8080'
 ```
 
 Then while in the same folder as the docker-compose.yml run:
@@ -27,39 +27,53 @@ You can learn more about using Docker by [reading the official Docker documentat
 
 ## Development
 
-### Trainer
+### Prerequisites
 
-The trainer builds the recommendation model and writes the output to `runtime/server/model/`.
-
-**Prerequisites:**
-
-- Python 3.14+
+- Python 3.12+
+- Node.js 24+
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
-- [TMDB dataset](https://www.kaggle.com/datasets/alanvourch/tmdb-movies-daily-updates) saved as `trainer/dataset/TMDB_all_movies.csv`
+- [TMDB API read access token](https://developer.themoviedb.org/docs/getting-started)
 
-#### Steps
+### Setup
+
+From the repo root, install dependencies for both Python and Node.js:
 
 ```bash
-cd trainer
 uv sync
-uv run scripts/prep_data.py
-uv run scripts/train.py
+npm install
 ```
 
-`prep_data.py` filters `TMDB_all_movies.csv` down to `TMDB_reduced.csv`. `train.py` then produces `movie_vectors.bin` and `movie_ids.json` in `runtime/server/model/`. These are used by the Fastify server to perform recommendations.
+Create a `.env` file in the repo root with the following:
 
-### Runtime
+```
+TMDB_READ_ACCESS_TOKEN=your_token_here
+```
 
-The runtime is a Fastify server that serves the React frontend and exposes `/api` routes.
+### Running
 
-**Prerequisites:**
-
-- Node.js 22+
-
-#### Steps
+Start the API server (port 8080):
 
 ```bash
-cd runtime
-npm install
+uv run uvicorn main:app --reload --app-dir runtime/server-py
+```
+
+Start the client dev server (port 3000):
+
+```bash
 npm run dev
 ```
+
+Then visit http://localhost:3000/ to see the dev app. Changes to both the frontend and backend will hot reload their respective server.
+
+---
+
+### Trainer
+
+If you'd like to run the trainer yourself, you'll need the [TMDB dataset](https://www.kaggle.com/datasets/alanvourch/tmdb-movies-daily-updates) saved under `trainer/dataset/TMDB_all_movies.csv`.
+
+```bash
+uv run trainer/scripts/prep_data.py
+uv run trainer/scripts/train.py
+```
+
+`prep_data.py` filters `TMDB_all_movies.csv` down to `TMDB_reduced.csv`. `train.py` then produces the model artifacts in `runtime/model/`.

@@ -49,14 +49,10 @@ dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
     { name = "numpy" },
+    { name = "pandas" },
     { name = "python-dotenv" },
     { name = "scikit-learn" },
     { name = "uvicorn", extra = ["standard"] },
-]
-
-[package.dev-dependencies]
-trainer = [
-    { name = "pandas" },
 ]
 
 [package.metadata]
@@ -64,13 +60,11 @@ requires-dist = [
     { name = "fastapi" },
     { name = "httpx" },
     { name = "numpy" },
+    { name = "pandas", specifier = ">=3.0.3" },
     { name = "python-dotenv" },
     { name = "scikit-learn" },
     { name = "uvicorn", extras = ["standard"] },
 ]
-
-[package.metadata.requires-dev]
-trainer = [{ name = "pandas", specifier = ">=3.0.3" }]
 
 [[package]]
 name = "certifi"

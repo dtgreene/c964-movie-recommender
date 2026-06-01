@@ -53,36 +53,35 @@ def extract_names(value, limit=None):
         return str(value)
 
 
-# 1. Load the reduced dataset
-df = pd.read_csv("dataset/TMDB_reduced.csv")
-df["genres_text"] = df["genres"].apply(extract_names)
-df["cast_text"] = df["cast"].apply(lambda v: extract_names(v, limit=10))
-df["text"] = (
-    df["genres_text"] + " " +
-    df["cast_text"] + " " +
-    df["overview"].fillna("") + " " +
-    df["director"].fillna("") + " " +
-    df["tagline"].fillna("") + " " +
-    df["writers"].fillna("")
-)
+SCRIPT_DIR = Path(__file__).parent
 
-# 2. TF-IDF
-vectorizer = TfidfVectorizer(max_features=5000, stop_words="english")
+# 1. Load the reduced dataset and combine the movie row fields into a text
+#    document per movie.
+df = pd.read_csv(SCRIPT_DIR.parent / "dataset" / "TMDB_reduced.csv")
+df["genres_text"] = df["genres"].apply(extract_names)
+df["cast_text"] = df["cast"].apply(lambda v: extract_names(v, limit=15))
+text_cols = ["genres_text", "cast_text", "overview", "director", "tagline", "writers", "music_composer"]
+df["text"] = df[text_cols].fillna("").agg(" ".join, axis=1)
+
+# 2. TF-IDF — convert each movie's text into a vector of word scores. Words that
+#    appear often in one movie but rarely across all movies score higher.
+vectorizer = TfidfVectorizer(max_features=15000, stop_words="english")
 tfidf_matrix = vectorizer.fit_transform(df["text"])  # sparse (n_movies x 5000)
 
 # 3. TruncatedSVD (LSA) — works on the sparse matrix directly, no .toarray() needed
-svd = TruncatedSVD(n_components=100)
+svd = TruncatedSVD(n_components=200)
 vectors = svd.fit_transform(tfidf_matrix)
 
 # 4. L2-normalize so cosine similarity == dot product downstream
 vectors = normalize(vectors)
 
-out = Path("../runtime/model")
+out = SCRIPT_DIR.parent.parent / "runtime" / "model"
 out.mkdir(exist_ok=True)
 
 # 5. Serialize — binary float32 for fast loading, IDs as a sidecar JSON
 vectors.astype(np.float32).tofile(out / "movie_vectors.bin")
 ids = [int(df["id"].iloc[i]) for i in range(len(df))]
+
 with open(out / "movie_ids.json", "w") as f:
     json.dump(ids, f)
 
@@ -91,21 +90,14 @@ metadata = {
     "n_features": len(vectorizer.vocabulary_),
     "n_movies": len(df),
 }
+
 with open(out / "metadata.json", "w") as f:
     json.dump(metadata, f)
 
 # 6. Pickle fitted sklearn objects for use by the Python server
 with open(out / "vectorizer.pkl", "wb") as f:
     pickle.dump(vectorizer, f)
+
 with open(out / "svd.pkl", "wb") as f:
     pickle.dump(svd, f)
 
-# 7. Export transform artifacts for runtime vector computation
-# Vocabulary must be JSON since keys are strings; weights and components are binary float32
-with open(out / "vocabulary.json", "w") as f:
-    json.dump({k: int(v) for k, v in vectorizer.vocabulary_.items()}, f)
-
-vectorizer.idf_.astype(np.float32).tofile(out / "idf_weights.bin")
-
-# Shape: (n_components x n_features) = (100 x 5000), row-major
-svd.components_.astype(np.float32).tofile(out / "svd_components.bin")

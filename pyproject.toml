@@ -9,9 +9,5 @@ dependencies = [
     "numpy",
     "scikit-learn",
     "python-dotenv",
-]
-
-[dependency-groups]
-trainer = [
     "pandas>=3.0.3",
 ]

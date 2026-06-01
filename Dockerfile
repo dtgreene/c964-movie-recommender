@@ -11,7 +11,7 @@ FROM python:3.14-slim AS runner
 WORKDIR /app
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock ./
-RUN uv sync --no-group trainer
+RUN uv sync
 COPY runtime/server-py ./runtime/server-py
 COPY runtime/model ./runtime/model
 COPY --from=builder /app/runtime/server-py/public ./runtime/server-py/public
