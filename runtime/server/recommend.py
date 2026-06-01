@@ -4,21 +4,22 @@ import numpy as np
 from pathlib import Path
 from sklearn.preprocessing import normalize
 
-MODEL_DIR = Path(__file__).parent / '../model'
+MODEL_DIR = Path(__file__).parent / "../model"
 
-with open(MODEL_DIR / 'metadata.json') as f:
+with open(MODEL_DIR / "metadata.json") as f:
     meta = json.load(f)
 
-movie_ids = json.loads((MODEL_DIR / 'movie_ids.json').read_text())
+movie_ids = json.loads((MODEL_DIR / "movie_ids.json").read_text())
 id_to_index = {id: i for i, id in enumerate(movie_ids)}
 
-movie_matrix = np.fromfile(MODEL_DIR / 'movie_vectors.bin', dtype=np.float32).reshape(
-    meta['n_movies'], meta['n_components']
+movie_matrix = np.fromfile(MODEL_DIR / "movie_vectors.bin", dtype=np.float32).reshape(
+    meta["n_movies"], meta["n_components"]
 )
 
-with open(MODEL_DIR / 'vectorizer.pkl', 'rb') as f:
+with open(MODEL_DIR / "vectorizer.pkl", "rb") as f:
     vectorizer = pickle.load(f)
-with open(MODEL_DIR / 'svd.pkl', 'rb') as f:
+
+with open(MODEL_DIR / "svd.pkl", "rb") as f:
     svd = pickle.load(f)
 
 
@@ -28,12 +29,21 @@ def get_vector(movie_id):
 
 
 def build_movie_text(details, credits):
-    genres = ' '.join(g['name'] for g in details.get('genres', []))
-    cast = ' '.join(c['name'] for c in credits.get('cast', [])[:10])
-    crew = credits.get('crew', [])
-    director = next((c['name'] for c in crew if c.get('job') == 'Director'), '')
-    writers = ' '.join(c['name'] for c in crew if c.get('department') == 'Writing')
-    return ' '.join([genres, cast, details.get('overview', ''), director, details.get('tagline', ''), writers])
+    genres = " ".join(g["name"] for g in details.get("genres", []))
+    cast = " ".join(c["name"] for c in credits.get("cast", [])[:10])
+    crew = credits.get("crew", [])
+    director = next((c["name"] for c in crew if c.get("job") == "Director"), "")
+    writers = " ".join(c["name"] for c in crew if c.get("department") == "Writing")
+    return " ".join(
+        [
+            genres,
+            cast,
+            details.get("overview", ""),
+            director,
+            details.get("tagline", ""),
+            writers,
+        ]
+    )
 
 
 def compute_vector(text):
@@ -59,7 +69,11 @@ def recommend(liked_ids, disliked_ids, top_n=20):
     excluded = set(liked_ids) | set(disliked_ids)
 
     results = sorted(
-        ((movie_ids[i], float(scores[i])) for i in range(len(movie_ids)) if movie_ids[i] not in excluded),
+        (
+            (movie_ids[i], float(scores[i]))
+            for i in range(len(movie_ids))
+            if movie_ids[i] not in excluded
+        ),
         key=lambda x: -x[1],
     )
     return [id for id, _ in results[:top_n]]

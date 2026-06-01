@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev:client": "vite",
-    "dev:server": "uv run uvicorn main:app --reload --app-dir runtime/server --port 8080",
+    "dev:server": "uv run uvicorn main:app --app-dir runtime/server --port 8080",
+    "train": "uv run trainer/scripts/train.py",
     "build": "vite build"
   },
   "license": "ISC",

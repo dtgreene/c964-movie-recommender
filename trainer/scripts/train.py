@@ -1,4 +1,3 @@
-import ast
 import json
 import pickle
 import numpy as np
@@ -39,28 +38,28 @@ imdb_votes
 poster_path
 """
 
-def extract_names(value, limit=None):
-    """Pull 'name' fields out of a TMDB JSON column (e.g. genres, cast)."""
-    if pd.isna(value):
-        return ""
-    try:
-        items = ast.literal_eval(value)
-        names = [item["name"] for item in items if "name" in item]
-        if limit:
-            names = names[:limit]
-        return " ".join(names)
-    except (ValueError, SyntaxError, TypeError):
-        return str(value)
+"""
+2,Ariel,7.106,371.0,Released,1988-10-21,0.0,73.0,0.0,tt0094675,fi,Ariel,A Finnish man goes to the city to find a job after the mine where he worked is closed and his father commits suicide.,1.6384,,"Comedy, Drama, Romance, Crime",Villealfa Filmproductions,Finland,suomi,"Kari Helaseppä, Jaakko Talaskivi, Mikko Remes, Merja Pulkkinen, Esko Salminen, Timo Markko, Sami Lanki, Marja Packalén, Tarja Keinänen, Olli Varja, Matti Jaaranen, Heikki Anttila, Markku Rantala, Hannu Viholainen, Tomi Salmela, Kauko Laalo, Esko Nikkari, Hannu Kivisalo, Sirkka Rautiainen, Eetu Hilkamo, Jyrki Olsonen, Heikki Salomaa, Veikko Uusimäki, Turo Pajala, Timo Harakka, Juuso Hirvikangas, Jouko Lumme, Matti Pellonpää, Sakari Kuosmanen, Pentti Auer, Reijo Marin, Timo Toikka, Jorma Markkula, Mikko Lyytikäinen, Hanna Jokinen, Eino Kuusela, Pekka Wilen, Susanna Haavisto, Erkki Pajala",Aki Kaurismäki,Timo Salminen,Aki Kaurismäki,Aki Kaurismäki,,7.4,9780.0,/ojDg0PGvs6R9xYFodRct2kdI6wC.jpg
+"""
 
-
+CAST_LIMIT = 15
 SCRIPT_DIR = Path(__file__).parent
 
-# 1. Load the reduced dataset and combine the movie row fields into a text
-#    document per movie.
+# 1. Load the reduced dataset and combine the movie row fields into a single
+#    value. The cast field is limited to prevent excess noise.
 df = pd.read_csv(SCRIPT_DIR.parent / "dataset" / "TMDB_reduced.csv")
-df["genres_text"] = df["genres"].apply(extract_names)
-df["cast_text"] = df["cast"].apply(lambda v: extract_names(v, limit=15))
-text_cols = ["genres_text", "cast_text", "overview", "director", "tagline", "writers", "music_composer"]
+df["cast"] = df["cast"].apply(
+    lambda v: ", ".join(str(v).split(", ")[:CAST_LIMIT]) if pd.notna(v) else ""
+)
+text_cols = [
+    "genres",
+    "cast",
+    "overview",
+    "director",
+    "tagline",
+    "writers",
+    "music_composer",
+]
 df["text"] = df[text_cols].fillna("").agg(" ".join, axis=1)
 
 # 2. TF-IDF — convert each movie's text into a vector of word scores. Words that
@@ -100,4 +99,3 @@ with open(out / "vectorizer.pkl", "wb") as f:
 
 with open(out / "svd.pkl", "wb") as f:
     pickle.dump(svd, f)
-

@@ -1,5 +1,6 @@
 {
   "python.terminal.activateEnvironment": false,
+  "terminal.integrated.shellIntegration.enabled": false,
   "files.associations": {
     "*.css": "tailwindcss"
   }

@@ -19,7 +19,7 @@ with zipfile.ZipFile(BytesIO(response.content)) as zf:
 
     if not csv_files:
         raise RuntimeError("No CSV found in zip")
-    
+
     zf.extract(csv_files[0], OUT_DIR)
     extracted = OUT_DIR / csv_files[0]
 

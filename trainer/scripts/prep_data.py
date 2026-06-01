@@ -15,11 +15,11 @@ df = pd.read_csv(all_movies)
 total_records = len(df)
 
 filtered = df[
-    (df["status"] == "Released") &
-    (df["imdb_id"].notna()) &
-    (pd.to_numeric(df["imdb_votes"], errors="coerce") > MIN_IMDB_VOTE_COUNT) &
-    (pd.to_numeric(df["runtime"], errors="coerce") > MIN_RUNTIME_MINUTES) &
-    (df["overview"].notna())
+    (df["status"] == "Released")
+    & (df["imdb_id"].notna())
+    & (pd.to_numeric(df["imdb_votes"], errors="coerce") > MIN_IMDB_VOTE_COUNT)
+    & (pd.to_numeric(df["runtime"], errors="coerce") > MIN_RUNTIME_MINUTES)
+    & (df["overview"].notna())
 ]
 
 print(f"Original record count: {total_records}")
