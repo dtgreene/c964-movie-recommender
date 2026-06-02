@@ -1,3 +1,4 @@
+import asyncio
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -7,7 +8,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Query
 from fastapi.staticfiles import StaticFiles
 
-from recommend import recommend, get_vector, compute_vector, build_movie_text
+from recommend import recommend, get_vector, compute_vector, build_movie_text, movie_ids
 
 load_dotenv()
 
@@ -58,26 +59,48 @@ async def movie(movie_id: int):
     return await tmdb_get(f"/3/movie/{movie_id}")
 
 
+async def resolve_vector(id):
+    # Try and lookup the vector from the list produced by the training data
+    vector = get_vector(id)
+
+    if vector is not None:
+        return vector
+
+    # Since this movie wasnt in the training data, we need to fetch the details
+    # to create the text representation + vector.
+    [details, credits] = await asyncio.gather(
+        tmdb_get(f"/3/movie/{id}"),
+        tmdb_get(f"/3/movie/{id}/credits"),
+    )
+    text = build_movie_text(details, credits)
+    return compute_vector(text)
+
+
 @app.get("/api/recommendations")
 async def recommendations(
     liked: list[int] = Query(default=[]),
     disliked: list[int] = Query(default=[]),
 ):
-    unknown_ids = [id for id in [*liked, *disliked] if get_vector(id) is None]
+    all_ids = list(dict.fromkeys([*liked, *disliked]))
+    vectors = dict(
+        zip(all_ids, await asyncio.gather(*[resolve_vector(id) for id in all_ids]))
+    )
 
-    if unknown_ids:
-        details_and_credits = [
-            (
-                await tmdb_get(f"/3/movie/{id}"),
-                await tmdb_get(f"/3/movie/{id}/credits"),
-            )
-            for id in unknown_ids
-        ]
-        for id, (details, credits) in zip(unknown_ids, details_and_credits):
-            text = build_movie_text(details, credits)
-            _ = compute_vector(text)  # TODO: pass synthesized vector into recommend()
+    scores = recommend([vectors[id] for id in liked], [vectors[id] for id in disliked])
+    if scores is None:
+        return []
 
-    return recommend(liked, disliked)
+    excluded = set(liked) | set(disliked)
+    ranked = sorted(
+        (
+            (movie_ids[i], float(scores[i]))
+            for i in range(len(movie_ids))
+            if movie_ids[i] not in excluded
+        ),
+        key=lambda x: -x[1],
+    )
+    top_ids = [id for id, _ in ranked[:20]]
+    return await asyncio.gather(*[tmdb_get(f"/3/movie/{id}") for id in top_ids])
 
 
 app.mount(

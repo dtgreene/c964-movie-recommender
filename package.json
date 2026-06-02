@@ -5,6 +5,7 @@
   "scripts": {
     "dev:client": "vite",
     "dev:server": "uv run uvicorn main:app --app-dir runtime/server --port 8080",
+    "train:prep": "uv run trainer/scripts/prep_data.py",
     "train": "uv run trainer/scripts/train.py",
     "build": "vite build"
   },

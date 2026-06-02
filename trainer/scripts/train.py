@@ -39,7 +39,7 @@ poster_path
 """
 
 """
-2,Ariel,7.106,371.0,Released,1988-10-21,0.0,73.0,0.0,tt0094675,fi,Ariel,A Finnish man goes to the city to find a job after the mine where he worked is closed and his father commits suicide.,1.6384,,"Comedy, Drama, Romance, Crime",Villealfa Filmproductions,Finland,suomi,"Kari Helaseppä, Jaakko Talaskivi, Mikko Remes, Merja Pulkkinen, Esko Salminen, Timo Markko, Sami Lanki, Marja Packalén, Tarja Keinänen, Olli Varja, Matti Jaaranen, Heikki Anttila, Markku Rantala, Hannu Viholainen, Tomi Salmela, Kauko Laalo, Esko Nikkari, Hannu Kivisalo, Sirkka Rautiainen, Eetu Hilkamo, Jyrki Olsonen, Heikki Salomaa, Veikko Uusimäki, Turo Pajala, Timo Harakka, Juuso Hirvikangas, Jouko Lumme, Matti Pellonpää, Sakari Kuosmanen, Pentti Auer, Reijo Marin, Timo Toikka, Jorma Markkula, Mikko Lyytikäinen, Hanna Jokinen, Eino Kuusela, Pekka Wilen, Susanna Haavisto, Erkki Pajala",Aki Kaurismäki,Timo Salminen,Aki Kaurismäki,Aki Kaurismäki,,7.4,9780.0,/ojDg0PGvs6R9xYFodRct2kdI6wC.jpg
+497,The Green Mile,8.507,19272.0,Released,1999-12-10,286801374.0,189.0,60000000.0,tt0120689,en,The Green Mile,"A supernatural tale set on death row in a Southern prison, where gentle giant John Coffey possesses the mysterious power to heal people's ailments. When the cell block's head guard, Paul Edgecomb, recognizes Coffey's miraculous gift, he tries desperately to help stave off the condemned man's execution.",27.901,Paul Edgecomb didn't believe in miracles. Until the day he met one.,"Fantasy, Drama, Crime","Castle Rock Entertainment, Darkwoods Productions",United States of America,"Français, English","Garth Shaw, Christopher Joel Ives, Phil Hawn, Paula Malcomson, Gower Mills, Bailey Drucker, Van Epperson, Michael Clarke Duncan, Brian Libby, Katelyn Leavenworth, Bonnie Hunt, Brent Briscoe, David E. Browning, William Sadler, Todd Thompson, James Cromwell, Rai Tasco, Harry Dean Stanton, Tommy Barnes, Wes Hall, Jeffrey DeMunn, Rebecca Klingler, Jared Stovall, Patricia Clarkson, Michael Jeter, Evanne Drucker, Edrie Warner, Gary Imhoff, Rachel Singer, Graham Greene, Scotty Leavenworth, Gary Sinise, Sam Rockwell, Eve Brent, Bill Gratton, Barry Pepper, Judy Herrera, David Morse, Doug Hutchison, Dee Croxton, Bill McKinney, Mack Miles, Tom Hanks, Dabbs Greer",Frank Darabont,David Tattersall,"Stephen King, Frank Darabont","Frank Darabont, David Valdes",Thomas Newman,8.6,1563228.0,/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg
 """
 
 CAST_LIMIT = 15
@@ -65,16 +65,16 @@ df["text"] = df[text_cols].fillna("").agg(" ".join, axis=1)
 # 2. TF-IDF — convert each movie's text into a vector of word scores. Words that
 #    appear often in one movie but rarely across all movies score higher.
 vectorizer = TfidfVectorizer(max_features=15000, stop_words="english")
-tfidf_matrix = vectorizer.fit_transform(df["text"])  # sparse (n_movies x 5000)
+tfidf_matrix = vectorizer.fit_transform(df["text"])
 
-# 3. TruncatedSVD (LSA) — works on the sparse matrix directly, no .toarray() needed
+# 3. TruncatedSVD (LSA)
 svd = TruncatedSVD(n_components=200)
 vectors = svd.fit_transform(tfidf_matrix)
 
 # 4. L2-normalize so cosine similarity == dot product downstream
 vectors = normalize(vectors)
 
-out = SCRIPT_DIR.parent.parent / "runtime" / "model"
+out = SCRIPT_DIR.parent.parent / "runtime" / "server" / "model"
 out.mkdir(exist_ok=True)
 
 # 5. Serialize — binary float32 for fast loading, IDs as a sidecar JSON

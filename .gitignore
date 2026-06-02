@@ -3,7 +3,7 @@ __pycache__/
 *.pyc
 
 trainer/dataset/
-runtime/model/
+runtime/server/model/
 
 node_modules/
 

@@ -2,7 +2,8 @@ import runpy
 import pandas as pd
 from pathlib import Path
 
-MIN_IMDB_VOTE_COUNT = 100
+MIN_IMDB_VOTE_COUNT = 500
+MIN_IMDB_RATING = 5.0
 MIN_RUNTIME_MINUTES = 45
 
 data_dir = Path(__file__).parent.parent / "dataset"
@@ -10,6 +11,8 @@ all_movies = data_dir / "TMDB_all_movies.csv"
 
 if not all_movies.exists():
     runpy.run_path(str(Path(__file__).parent / "download.py"))
+else:
+    print("Dataset found; Skipping download.")
 
 df = pd.read_csv(all_movies)
 total_records = len(df)
@@ -18,6 +21,7 @@ filtered = df[
     (df["status"] == "Released")
     & (df["imdb_id"].notna())
     & (pd.to_numeric(df["imdb_votes"], errors="coerce") > MIN_IMDB_VOTE_COUNT)
+    & (pd.to_numeric(df["imdb_rating"], errors="coerce") >= MIN_IMDB_RATING)
     & (pd.to_numeric(df["runtime"], errors="coerce") > MIN_RUNTIME_MINUTES)
     & (df["overview"].notna())
 ]

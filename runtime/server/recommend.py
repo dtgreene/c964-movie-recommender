@@ -4,7 +4,8 @@ import numpy as np
 from pathlib import Path
 from sklearn.preprocessing import normalize
 
-MODEL_DIR = Path(__file__).parent / "../model"
+CAST_LIMIT = 15
+MODEL_DIR = Path(__file__).parent / "./model"
 
 with open(MODEL_DIR / "metadata.json") as f:
     meta = json.load(f)
@@ -29,21 +30,27 @@ def get_vector(movie_id):
 
 
 def build_movie_text(details, credits):
-    genres = " ".join(g["name"] for g in details.get("genres", []))
-    cast = " ".join(c["name"] for c in credits.get("cast", [])[:10])
     crew = credits.get("crew", [])
-    director = next((c["name"] for c in crew if c.get("job") == "Director"), "")
-    writers = " ".join(c["name"] for c in crew if c.get("department") == "Writing")
-    return " ".join(
-        [
-            genres,
-            cast,
-            details.get("overview", ""),
-            director,
-            details.get("tagline", ""),
-            writers,
-        ]
-    )
+    cast = credits.get("cast", [])
+
+    fields = {
+        "genres": " ".join(genre["name"] for genre in details.get("genres", [])),
+        "cast": " ".join(member["name"] for member in cast[:CAST_LIMIT]),
+        "overview": details.get("overview", ""),
+        "director": next(
+            (member["name"] for member in crew if member.get("job") == "Director"), ""
+        ),
+        "tagline": details.get("tagline", ""),
+        "writers": " ".join(
+            member["name"] for member in crew if member.get("department") == "Writing"
+        ),
+        "music_composer": " ".join(
+            member["name"]
+            for member in crew
+            if member.get("job") == "Original Music Composer"
+        ),
+    }
+    return " ".join(fields.values())
 
 
 def compute_vector(text):
@@ -52,28 +59,16 @@ def compute_vector(text):
     return normalize(vector)[0]
 
 
-def recommend(liked_ids, disliked_ids, top_n=20):
-    liked_vectors = [v for id in liked_ids if (v := get_vector(id)) is not None]
-    disliked_vectors = [v for id in disliked_ids if (v := get_vector(id)) is not None]
-
+def recommend(liked_vectors, disliked_vectors):
     if not liked_vectors:
-        return []
+        return None
 
     pref = np.mean(liked_vectors, axis=0)
+
     if disliked_vectors:
         pref -= np.mean(disliked_vectors, axis=0) * 0.5
+
     norm = np.linalg.norm(pref)
     pref = pref / norm if norm > 0 else pref
 
-    scores = movie_matrix @ pref
-    excluded = set(liked_ids) | set(disliked_ids)
-
-    results = sorted(
-        (
-            (movie_ids[i], float(scores[i]))
-            for i in range(len(movie_ids))
-            if movie_ids[i] not in excluded
-        ),
-        key=lambda x: -x[1],
-    )
-    return [id for id, _ in results[:top_n]]
+    return movie_matrix @ pref
