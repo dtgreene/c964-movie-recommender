@@ -5,9 +5,10 @@
   "scripts": {
     "dev:client": "vite",
     "dev:server": "uv run uvicorn main:app --app-dir runtime/server --port 8080",
-    "train:prep": "uv run trainer/scripts/prep_data.py",
-    "train": "uv run trainer/scripts/train.py",
-    "build": "vite build"
+    "train": "uv run python -u trainer/scripts/train.py",
+    "build": "vite build",
+    "docker:build": "docker build -t c964-movie-recommender .",
+    "docker:push": "docker tag c964-movie-recommender ghcr.io/dtgreene/c964-movie-recommender:latest && docker push ghcr.io/dtgreene/c964-movie-recommender:latest"
   },
   "license": "ISC",
   "type": "module",
