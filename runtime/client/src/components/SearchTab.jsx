@@ -14,15 +14,10 @@ import { MovieResults } from './MovieResults';
  * will be less targeted)
  */
 
-/**
- * Allow disliking/ignoring movies. This can be factored into the recommedation
- * calculation to negatively influence certain movies.
- */
-
 export const SearchTab = ({ isActive }) => {
   const [params, setParams] = useState({ query: '', page: 1 });
 
-  const { data, isPending } = useQuery({
+  const { data, isPending, error } = useQuery({
     queryKey: ['search', params.query, params.page],
     queryFn: async () => {
       const options = { params: { query: params.query, page: params.page } };
@@ -69,6 +64,7 @@ export const SearchTab = ({ isActive }) => {
             data={data}
             isLoading={isPending}
             noResultsMessage={noResultsMessage}
+            error={error}
           />
         ) : (
           <div className="my-8 text-xl text-zinc-500">

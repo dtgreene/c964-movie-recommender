@@ -3,13 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
 import { groupByRating, userState } from '../store';
+import { MovieResults } from './MovieResults';
 
 export const RecommendationsTab = ({ isActive }) => {
   const userSnap = useSnapshot(userState);
   const { liked, disliked } = groupByRating(userSnap);
   const movieIds = liked.concat(disliked).map((movie) => movie.id);
-  console.log(movieIds, isActive);
-  const { data, isPending } = useQuery({
+
+  const { data, isPending, error } = useQuery({
     queryKey: ['recommendations', ...movieIds],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -22,6 +23,12 @@ export const RecommendationsTab = ({ isActive }) => {
       const response = await axios.get(`/api/recommendations?${params}`);
       return response.data;
     },
-    enabled: movieIds.length >= 5 && isActive,
+    enabled: liked.length >= 5 && isActive,
   });
+
+  return (
+    <div className="flex flex-col items-center">
+      <MovieResults data={data?.results} isLoading={isPending} error={error} />
+    </div>
+  );
 };

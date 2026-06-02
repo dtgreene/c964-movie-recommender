@@ -3,10 +3,10 @@ import { ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
 import { userState } from '../store';
 import { useSnapshot } from 'valtio';
 
-export const MovieThumbnail = ({
-  movie: { id, title, release_date, poster_path },
-}) => {
+export const MovieThumbnail = ({ movie }) => {
   const userSnap = useSnapshot(userState);
+
+  const { id, title, release_date, poster_path } = movie;
   const isLiked = userSnap.myStuff[id]?.rating === 'liked';
   const isDisliked = userSnap.myStuff[id]?.rating === 'disliked';
 
@@ -14,7 +14,7 @@ export const MovieThumbnail = ({
     if (!isLiked) {
       userState.myStuff[id] = {
         rating: 'liked',
-        movie: { id, title, release_date, poster_path },
+        movie,
       };
     } else {
       delete userState.myStuff[id];
@@ -25,7 +25,7 @@ export const MovieThumbnail = ({
     if (!isDisliked) {
       userState.myStuff[id] = {
         rating: 'disliked',
-        movie: { id, title, release_date, poster_path },
+        movie,
       };
     } else {
       delete userState.myStuff[id];
