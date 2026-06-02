@@ -5,10 +5,20 @@ from pathlib import Path
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 
-from recommend import recommend, get_vector, compute_vector, build_movie_text, movie_ids
+from recommend import (
+    compute_pref_vector,
+    recommend,
+    get_vector,
+    get_rating,
+    compute_text_vector,
+    build_movie_text,
+    movie_ids,
+    most_similar,
+    top_terms,
+)
 
 load_dotenv()
 
@@ -73,23 +83,31 @@ async def resolve_vector(id):
         tmdb_get(f"/3/movie/{id}/credits"),
     )
     text = build_movie_text(details, credits)
-    return compute_vector(text)
+    return compute_text_vector(text)
 
 
 @app.get("/api/recommendations")
 async def recommendations(
     liked: list[int] = Query(default=[]),
     disliked: list[int] = Query(default=[]),
+    sort_by: str | None = None,
 ):
+    if len(liked) < 5:
+        raise HTTPException(
+            status_code=400,
+            detail="At least 5 liked movies are required.",
+        )
+
     all_ids = list(dict.fromkeys([*liked, *disliked]))
-    vectors = dict(
+    all_vectors = dict(
         zip(all_ids, await asyncio.gather(*[resolve_vector(id) for id in all_ids]))
     )
 
-    scores = recommend([vectors[id] for id in liked], [vectors[id] for id in disliked])
-    if scores is None:
-        return []
+    liked_vectors = [all_vectors[id] for id in liked]
+    disliked_vectors = [all_vectors[id] for id in disliked]
+    pref = compute_pref_vector(liked_vectors, disliked_vectors)
 
+    scores = recommend(pref)
     excluded = set(liked) | set(disliked)
     ranked = sorted(
         (
@@ -98,9 +116,24 @@ async def recommendations(
             if movie_ids[i] not in excluded
         ),
         key=lambda x: -x[1],
-    )
-    top_ids = [id for id, _ in ranked[:20]]
-    return await asyncio.gather(*[tmdb_get(f"/3/movie/{id}") for id in top_ids])
+    )[:50]
+
+    rec_vectors = [get_vector(id) for id, _ in ranked]
+    movies = await asyncio.gather(*[tmdb_get(f"/3/movie/{id}") for id, _ in ranked])
+    results = [
+        {
+            "_rec_score": score,
+            "_rec_similar_to": liked[most_similar(rec_vec, liked_vectors)],
+            "_imdb_rating": get_rating(id),
+            **movie,
+        }
+        for movie, (id, score), rec_vec in zip(movies, ranked, rec_vectors)
+    ]
+
+    if sort_by == "imdb_rating":
+        results.sort(key=lambda m: m["_imdb_rating"] or 0, reverse=True)
+
+    return {"_rec_terms": top_terms(pref), "results": results}
 
 
 app.mount(

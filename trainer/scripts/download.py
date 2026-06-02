@@ -8,12 +8,14 @@ OUT_DIR = Path(__file__).parent.parent / "dataset"
 
 OUT_DIR.mkdir(exist_ok=True)
 
-print("Downloading dataset...")
+print("Begin download...")
+print("  Downloading dataset...")
 with httpx.Client(follow_redirects=True, timeout=120) as client:
     response = client.get(DATASET_URL)
     response.raise_for_status()
+print(f"  Downloaded {len(response.content) / 1_000_000:.1f} MB.")
 
-print("Extracting dataset...")
+print("  Extracting dataset...")
 with zipfile.ZipFile(BytesIO(response.content)) as zf:
     csv_files = [f for f in zf.namelist() if f.endswith(".csv")]
 
@@ -26,4 +28,4 @@ with zipfile.ZipFile(BytesIO(response.content)) as zf:
     if extracted.name != "TMDB_all_movies.csv":
         extracted.rename(OUT_DIR / "TMDB_all_movies.csv")
 
-print(f"Saved to {OUT_DIR / 'TMDB_all_movies.csv'}")
+print("Download complete.")
