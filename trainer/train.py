@@ -7,7 +7,7 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import normalize
 
-from prep_data import prepare
+from trainer.prep_data import prepare
 
 """
 id

@@ -1,9 +1,11 @@
+import { Fragment } from 'react';
 import { useSnapshot } from 'valtio';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
 import { groupByRating, userState } from '../store';
 import { MovieResults } from './MovieResults';
+import { BinarySwitch } from './BinarySwitch';
 
 export const RecommendationsTab = ({ isActive, onTabChange }) => {
   const userSnap = useSnapshot(userState);
@@ -11,7 +13,8 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
   const movieIds = liked.concat(disliked).map((movie) => movie.id);
   const minLikedDelta = 5 - liked.length;
   const hasMinLiked = minLikedDelta <= 0;
-  const weights = { vote: 0, popular: 0 };
+  const voteWeight = userSnap.userWeights.vote;
+  const popularWeight = userSnap.userWeights.popular;
 
   /**
    * The TMDb Popularity Score is a dynamic, daily-updated metric that measures
@@ -20,7 +23,7 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
    */
 
   const { data, isPending, error } = useQuery({
-    queryKey: ['recommendations', ...movieIds, JSON.stringify(weights)],
+    queryKey: ['recommendations', ...movieIds, voteWeight, popularWeight],
     queryFn: async () => {
       const params = new URLSearchParams();
       liked.forEach((movie) => {
@@ -30,8 +33,8 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
         params.append('disliked', movie.id);
       });
 
-      params.set('imdb_vote_weight', weights.vote);
-      params.set('tmdb_popular_weight', weights.popular);
+      params.set('imdb_vote_weight', voteWeight);
+      params.set('tmdb_popular_weight', popularWeight);
 
       const response = await axios.get(`/api/recommendations?${params}`);
       return response.data;
@@ -60,11 +63,47 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
   return (
     <div className="flex flex-col items-center">
       {hasMinLiked ? (
-        <MovieResults
-          data={data?.results}
-          isLoading={isPending}
-          error={error}
-        />
+        <Fragment>
+          <div className="flex justify-between w-full items-end">
+            <div>
+              <div>
+                <div className="font-semibold">IMDb Vote Weight</div>
+                <input
+                  className="cursor-pointer"
+                  type="range"
+                  min="0"
+                  max="0"
+                  step="0.1"
+                />
+              </div>
+              <div>
+                <div className="font-semibold">TMDb Popular Weight</div>
+                <input
+                  className="cursor-pointer"
+                  type="range"
+                  min="0"
+                  max="0"
+                  step="0.1"
+                />
+              </div>
+            </div>
+            <div>
+              <BinarySwitch
+                labelA="Grid"
+                labelB="List"
+                isActive={true}
+                onChange={() => {}}
+              />
+            </div>
+          </div>
+          <div className="mt-6">
+            <MovieResults
+              data={data?.results}
+              isLoading={isPending}
+              error={error}
+            />
+          </div>
+        </Fragment>
       ) : (
         <div className="mt-12 text-zinc-500 flex flex-col gap-2 text-center">
           <div className="text-xl">

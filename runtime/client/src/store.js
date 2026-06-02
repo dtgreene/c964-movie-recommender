@@ -2,6 +2,10 @@ import { proxy, snapshot, subscribe } from 'valtio';
 
 export const userState = createStorageProxy('user-state', {
   myStuff: {}, // { [movieId]: { rating: 'liked' | 'disliked', movie: {...} } }
+  userWeights: {
+    vote: 0,
+    popular: 0,
+  },
 });
 
 export function groupByRating(snap) {
@@ -32,12 +36,32 @@ function createStorageProxy(key, defaultValue) {
   return state;
 }
 
+function mergeWithDefaults(stored, defaults) {
+  if (typeof defaults !== 'object' || Array.isArray(defaults)) {
+    return stored;
+  }
+
+  const result = { ...stored };
+  for (const key of Object.keys(defaults)) {
+    if (!(key in result)) {
+      result[key] = defaults[key];
+    } else if (
+      typeof defaults[key] === 'object' &&
+      !Array.isArray(defaults[key])
+    ) {
+      result[key] = mergeWithDefaults(result[key], defaults[key]);
+    }
+  }
+
+  return result;
+}
+
 function getStoredValue(key, defaultValue) {
   try {
     const storageItem = localStorage.getItem(key);
 
     if (storageItem) {
-      return JSON.parse(storageItem);
+      return mergeWithDefaults(JSON.parse(storageItem), defaultValue);
     }
   } catch {
     console.warn('Could not parse persisted state');

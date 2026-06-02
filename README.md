@@ -72,13 +72,13 @@ Then visit http://localhost:3000/ to see the dev app. Changes to both the fronte
 If you'd like to run the trainer yourself, first run the prep data script. This will automatically download the movie dataset from Kaggle if it's missing:
 
 ```bash
-uv run trainer/scripts/prep_data.py
+uv run trainer/prep_data.py
 ```
 
 Then run the training script:
 
 ```bash
-uv run trainer/scripts/train.py
+uv run trainer/train.py
 ```
 
 The training script will produce run time files that will be used by the recommendation endpoint.
