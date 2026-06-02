@@ -22,11 +22,16 @@ export const PopularTab = ({ isActive }) => {
   return (
     <div className="flex flex-col items-center">
       <BinarySwitch
-        onText="Trending"
-        offText="Top Rated"
+        labelA="Trending"
+        labelB="Top Rated"
         isActive={isTrending}
-        onSwitchOn={() => setParams({ ...params, key: 'trending' })}
-        onSwitchOff={() => setParams({ ...params, key: 'top_rated' })}
+        onChange={(value) => {
+          if (value) {
+            setParams({ ...params, key: 'trending' });
+          } else {
+            setParams({ ...params, key: 'top_rated' });
+          }
+        }}
       />
       <div className="mt-6">
         <MovieResults data={data} isLoading={isPending} error={error} />

@@ -18,6 +18,9 @@ movie_matrix = np.fromfile(MODEL_DIR / "movie_vectors.bin", dtype=np.float32).re
 with open(MODEL_DIR / "movie_ratings.json") as f:
     movie_ratings = {int(k): v for k, v in json.load(f).items()}
 
+with open(MODEL_DIR / "movie_popularity.json") as f:
+    movie_popularity = {int(k): v for k, v in json.load(f).items()}
+
 with open(MODEL_DIR / "vectorizer.pkl", "rb") as f:
     vectorizer = pickle.load(f)
 
@@ -32,6 +35,10 @@ def get_vector(movie_id):
 
 def get_rating(movie_id):
     return movie_ratings.get(movie_id)
+
+
+def get_popularity(movie_id):
+    return movie_popularity.get(movie_id)
 
 
 def build_movie_text(details, credits):
@@ -66,7 +73,6 @@ def compute_text_vector(text):
     vector = svd.transform(tfidf)
 
     return normalize(vector)[0]
-
 
 
 def most_similar(vec, candidate_vectors):

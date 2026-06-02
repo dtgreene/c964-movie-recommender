@@ -122,11 +122,15 @@ export const App = () => {
             />
             <TabPanel
               isActive={tab === Tabs.MY_STUFF}
-              render={(props) => <MyStuffTab {...props} />}
+              render={(props) => (
+                <MyStuffTab {...props} onTabChange={handleTabChange} />
+              )}
             />
             <TabPanel
               isActive={tab === Tabs.RECOMMENDATIONS}
-              render={(props) => <RecommendationsTab {...props} />}
+              render={(props) => (
+                <RecommendationsTab {...props} onTabChange={handleTabChange} />
+              )}
             />
           </div>
         </div>

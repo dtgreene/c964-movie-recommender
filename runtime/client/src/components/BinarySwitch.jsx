@@ -1,12 +1,6 @@
 import { cn } from '../utils';
 
-export const BinarySwitch = ({
-  onText,
-  offText,
-  isActive,
-  onSwitchOn,
-  onSwitchOff,
-}) => (
+export const BinarySwitch = ({ labelA, labelB, isActive, onChange }) => (
   <div className="relative rounded-full bg-zinc-200 p-1">
     <div
       className={cn(
@@ -18,17 +12,17 @@ export const BinarySwitch = ({
       className={cn('w-26 h-8 px-2 py-1 cursor-pointer relative', {
         'text-white': isActive,
       })}
-      onClick={onSwitchOn}
+      onClick={() => onChange(true)}
     >
-      {onText}
+      {labelA}
     </button>
     <button
       className={cn('w-26 h-8 px-2 py-1 cursor-pointer relative', {
         'text-white': !isActive,
       })}
-      onClick={onSwitchOff}
+      onClick={() => onChange(false)}
     >
-      {offText}
+      {labelB}
     </button>
   </div>
 );

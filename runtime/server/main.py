@@ -13,6 +13,7 @@ from recommend import (
     recommend,
     get_vector,
     get_rating,
+    get_popularity,
     compute_text_vector,
     build_movie_text,
     movie_ids,
@@ -39,6 +40,27 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+
+def normalize_range(vals):
+    lo, hi = min(vals), max(vals)
+    return lo, hi - lo or 1.0
+
+
+def rank_weighted(ranked, imdb_weight, popular_weight):
+    min_s, span_s = normalize_range([s for _, s in ranked])
+    min_i, span_i = normalize_range([get_rating(id) or 0 for id, _ in ranked])
+    min_p, span_p = normalize_range([get_popularity(id) or 0 for id, _ in ranked])
+
+    return sorted(
+        ranked,
+        reverse=True,
+        key=lambda x: (
+            (x[1] - min_s) / span_s
+            + imdb_weight * ((get_rating(x[0]) or 0) - min_i) / span_i
+            + popular_weight * ((get_popularity(x[0]) or 0) - min_p) / span_p
+        ),
+    )
 
 
 async def tmdb_get(path, params=None):
@@ -90,7 +112,8 @@ async def resolve_vector(id):
 async def recommendations(
     liked: list[int] = Query(default=[]),
     disliked: list[int] = Query(default=[]),
-    sort_by: str | None = None,
+    imdb_vote_weight: float = Query(default=0.0, ge=0.0, le=1.0),
+    tmdb_popular_weight: float = Query(default=0.0, ge=0.0, le=1.0),
 ):
     if len(liked) < 5:
         raise HTTPException(
@@ -116,10 +139,14 @@ async def recommendations(
             if movie_ids[i] not in excluded
         ),
         key=lambda x: -x[1],
-    )[:50]
+    )[:200]
 
-    rec_vectors = [get_vector(id) for id, _ in ranked]
-    movies = await asyncio.gather(*[tmdb_get(f"/3/movie/{id}") for id, _ in ranked])
+    if imdb_vote_weight > 0 or tmdb_popular_weight > 0:
+        ranked = rank_weighted(ranked, imdb_vote_weight, tmdb_popular_weight)
+
+    top = ranked[:10]
+    rec_vectors = [get_vector(id) for id, _ in top]
+    movies = await asyncio.gather(*[tmdb_get(f"/3/movie/{id}") for id, _ in top])
     results = [
         {
             "_rec_score": score,
@@ -127,11 +154,8 @@ async def recommendations(
             "_imdb_rating": get_rating(id),
             **movie,
         }
-        for movie, (id, score), rec_vec in zip(movies, ranked, rec_vectors)
+        for movie, (id, score), rec_vec in zip(movies, top, rec_vectors)
     ]
-
-    if sort_by == "imdb_rating":
-        results.sort(key=lambda m: m["_imdb_rating"] or 0, reverse=True)
 
     return {"_rec_terms": top_terms(pref), "results": results}
 

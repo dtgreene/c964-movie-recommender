@@ -67,7 +67,7 @@ export const SearchTab = ({ isActive }) => {
             error={error}
           />
         ) : (
-          <div className="my-8 text-xl text-zinc-500">
+          <div className="text-xl text-zinc-500">
             Find movies you enjoy to get personalized recommendations.
           </div>
         )}

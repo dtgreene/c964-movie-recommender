@@ -37,7 +37,9 @@ def prepare(data_dir):
         & (df["overview"].notna())
         & (pd.to_numeric(df["vote_count"], errors="coerce") > MIN_TMDB_VOTE_COUNT)
     ]
-    print(f"  {len(filtered)} records remaining ({total_records - len(filtered)} removed).")
+    print(
+        f"  {len(filtered)} records remaining ({total_records - len(filtered)} removed)."
+    )
 
     print("  Tokenizing name fields...")
     for col in ["genres", "cast", "director", "writers"]:

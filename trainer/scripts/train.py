@@ -88,6 +88,15 @@ ratings = {
 }
 with open(out / "movie_ratings.json", "w") as f:
     json.dump(ratings, f)
+
+popularity = {
+    int(id): round(float(p), 3)
+    for id, p in zip(df["id"], df["popularity"])
+    if pd.notna(p)
+}
+with open(out / "movie_popularity.json", "w") as f:
+    json.dump(popularity, f)
+
 ids = [int(df["id"].iloc[i]) for i in range(len(df))]
 
 with open(out / "movie_ids.json", "w") as f:
