@@ -2,9 +2,10 @@ import { Fragment, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
-import { MovieResults } from './MovieResults';
+import { MovieGrid } from './MovieGrid';
 import { cn } from '../utils';
 import { BinarySwitch } from './BinarySwitch';
+import { QueryState } from './QueryState';
 
 export const PopularTab = ({ isActive }) => {
   const [params, setParams] = useState({ key: 'trending', page: 1 });
@@ -34,7 +35,9 @@ export const PopularTab = ({ isActive }) => {
         }}
       />
       <div className="mt-6">
-        <MovieResults data={data} isLoading={isPending} error={error} />
+        <QueryState isLoading={isPending} error={error}>
+          <MovieGrid data={data} />
+        </QueryState>
       </div>
     </div>
   );

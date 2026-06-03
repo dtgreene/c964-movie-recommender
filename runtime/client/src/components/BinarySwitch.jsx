@@ -9,17 +9,23 @@ export const BinarySwitch = ({ labelA, labelB, isActive, onChange }) => (
       )}
     ></div>
     <button
-      className={cn('w-26 h-8 px-2 py-1 cursor-pointer relative', {
-        'text-white': isActive,
-      })}
+      className={cn(
+        'w-26 h-8 px-2 py-1 cursor-pointer relative transition-colors',
+        {
+          'text-white': isActive,
+        },
+      )}
       onClick={() => onChange(true)}
     >
       {labelA}
     </button>
     <button
-      className={cn('w-26 h-8 px-2 py-1 cursor-pointer relative', {
-        'text-white': !isActive,
-      })}
+      className={cn(
+        'w-26 h-8 px-2 py-1 cursor-pointer relative transition-colors',
+        {
+          'text-white': !isActive,
+        },
+      )}
       onClick={() => onChange(false)}
     >
       {labelB}

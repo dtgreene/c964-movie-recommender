@@ -8,10 +8,13 @@ MIN_RUNTIME_MINUTES = 45
 MIN_TMDB_VOTE_COUNT = 10
 
 
-def join_tokens(value):
+def _join_tokens(value):
     if pd.isna(value):
         return ""
-    return " ".join(part.strip().replace(" ", "_") for part in str(value).split(","))
+
+    tokens = (part.strip().replace(" ", "_") for part in str(value).split(","))
+
+    return " ".join(t for t in tokens if t)
 
 
 def prepare(data_dir):
@@ -42,8 +45,14 @@ def prepare(data_dir):
     )
 
     print("  Tokenizing name fields...")
-    for col in ["genres", "cast", "director", "writers"]:
-        filtered = filtered.copy()
-        filtered[col] = filtered[col].apply(join_tokens)
+    filtered = filtered.copy()
+    split_cols = [
+        "genres",
+        "cast",
+        "director",
+        "writers",
+    ]
+    for col in split_cols:
+        filtered[col] = filtered[col].apply(_join_tokens)
 
     return filtered

@@ -7,7 +7,7 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import normalize
 
-from trainer.prep_data import prepare
+from prep_data import prepare
 
 """
 id
@@ -45,18 +45,19 @@ poster_path
 """
 
 TFIDF_MAX_FEATURES = 15000
-TFIDF_MAX_DF = 0.3
-SVD_N_COMPONENTS = 300
+TFIDF_MAX_DF = 0.7
+SVD_N_COMPONENTS = 500
 
 SCRIPT_DIR = Path(__file__).parent
 
 print("Begin dataset prep...")
-df = prepare(SCRIPT_DIR.parent / "dataset")
+df = prepare(SCRIPT_DIR / "dataset")
 print("Dataset prep complete.")
 
 print("Begin training...")
 
-text_cols = ["genres", "cast", "overview", "director", "writers"]
+
+text_cols = ["genres", "cast", "director", "writers", "overview"]
 df["text"] = df[text_cols].fillna("").agg(" ".join, axis=1)
 print(f"  Loaded {len(df)} movies.")
 
@@ -77,7 +78,7 @@ print(f"  Explained variance: {svd.explained_variance_ratio_.sum():.1%}")
 print("  Normalizing vectors...")
 vectors = normalize(vectors)
 
-out = SCRIPT_DIR.parent.parent / "runtime" / "server" / "model"
+out = SCRIPT_DIR.parent / "runtime" / "server" / "model"
 out.mkdir(exist_ok=True)
 
 vectors.astype(np.float32).tofile(out / "movie_vectors.bin")

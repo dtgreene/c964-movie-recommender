@@ -6,10 +6,8 @@ import {
   SearchIcon,
   WandSparklesIcon,
 } from 'lucide-react';
-import { useSnapshot } from 'valtio';
 
 import { cn } from '../utils';
-import { groupByRating, userState } from '../store';
 import { queryClient } from '../query';
 import { MyStuffTab } from './MyStuffTab';
 import { SearchTab } from './SearchTab';
@@ -62,10 +60,6 @@ export const App = () => {
     window.history.replaceState(null, '', `?${params}`);
   };
 
-  const userSnap = useSnapshot(userState);
-  const { liked, disliked } = groupByRating(userSnap);
-  const hasRatings = liked.length > 0 || disliked.length > 0;
-
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex justify-center">
@@ -91,17 +85,6 @@ export const App = () => {
             >
               <BookmarkIcon className="shrink-0" size="20" />
               <span>My Stuff</span>
-              {hasRatings && (
-                <span className="flex gap-1">
-                  <span className="font-semibold text-emerald-500">
-                    {liked.length}
-                  </span>
-                  <span>/</span>
-                  <span className="font-semibold text-rose-500">
-                    {disliked.length}
-                  </span>
-                </span>
-              )}
             </TabButton>
             <TabButton
               onClick={() => handleTabChange(Tabs.RECOMMENDATIONS)}

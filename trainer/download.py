@@ -4,7 +4,7 @@ from io import BytesIO
 from pathlib import Path
 
 DATASET_URL = "https://www.kaggle.com/api/v1/datasets/download/alanvourch/tmdb-movies-daily-updates"
-OUT_DIR = Path(__file__).parent.parent / "dataset"
+OUT_DIR = Path(__file__).parent / "dataset"
 
 OUT_DIR.mkdir(exist_ok=True)
 

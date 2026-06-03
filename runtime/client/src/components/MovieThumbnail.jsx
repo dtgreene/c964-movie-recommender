@@ -1,9 +1,10 @@
+import { Fragment } from 'react';
 import { ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
 
 import { userState } from '../store';
 import { useSnapshot } from 'valtio';
 
-export const MovieThumbnail = ({ movie }) => {
+export const MovieThumbnail = ({ movie, disableRating }) => {
   const userSnap = useSnapshot(userState);
 
   const { id, title, release_date, poster_path } = movie;
@@ -40,40 +41,46 @@ export const MovieThumbnail = ({ movie }) => {
           className="w-full h-full"
           alt="Movie poster"
         />
-        {isLiked && (
-          <div className="absolute bottom-0 bg-emerald-500 w-full text-white p-1 text-center font-bold">
-            LIKED
-          </div>
+        {!disableRating && (
+          <Fragment>
+            {isLiked && (
+              <div className="absolute bottom-0 bg-emerald-500 w-full text-white p-1 text-center font-bold">
+                LIKED
+              </div>
+            )}
+            {isDisliked && (
+              <div className="absolute bottom-0 bg-rose-500 w-full text-white p-1 text-center font-bold">
+                DISLIKED
+              </div>
+            )}
+            <div className="absolute right-0 top-0 p-2 flex flex-col gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+              <button
+                onClick={handleThumbsUp}
+                className="bg-emerald-500/75 hover:bg-emerald-500 text-white rounded-full p-3 not-disabled:cursor-pointer transition-colors"
+              >
+                <ThumbsUpIcon size="24" />
+              </button>
+              <button
+                onClick={handleThumbsDown}
+                className="bg-rose-500/75 hover:bg-rose-500 text-white rounded-full p-3 not-disabled:cursor-pointer transition-colors"
+              >
+                <ThumbsDownIcon size="24" />
+              </button>
+            </div>
+          </Fragment>
         )}
-        {isDisliked && (
-          <div className="absolute bottom-0 bg-rose-500 w-full text-white p-1 text-center font-bold">
-            DISLIKED
-          </div>
-        )}
-        <div className="absolute right-0 top-0 p-2 flex flex-col gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-          <button
-            onClick={handleThumbsUp}
-            className="bg-emerald-500/75 hover:bg-emerald-500 text-white rounded-full p-3 not-disabled:cursor-pointer transition-colors"
-          >
-            <ThumbsUpIcon size="24" />
-          </button>
-          <button
-            onClick={handleThumbsDown}
-            className="bg-rose-500/75 hover:bg-rose-500 text-white rounded-full p-3 not-disabled:cursor-pointer transition-colors"
-          >
-            <ThumbsDownIcon size="24" />
-          </button>
-        </div>
       </div>
       <div className="p-2">
-        <a
-          className="line-clamp-2 font-semibold hover:underline block cursor-pointer"
-          href={`https://www.themoviedb.org/movie/${id}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {title}
-        </a>
+        <div>
+          <a
+            className="line-clamp-2 font-semibold hover:underline cursor-pointer inline"
+            href={`https://www.themoviedb.org/movie/${id}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {title}
+          </a>
+        </div>
         <div>
           {new Date(release_date).toLocaleDateString('en-US', {
             year: 'numeric',

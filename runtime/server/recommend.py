@@ -1,8 +1,11 @@
+import asyncio
 import json
 import pickle
 import numpy as np
 from pathlib import Path
 from sklearn.preprocessing import normalize
+
+from tmdb import tmdb_get
 
 MODEL_DIR = Path(__file__).parent / "./model"
 
@@ -27,59 +30,72 @@ with open(MODEL_DIR / "vectorizer.pkl", "rb") as f:
 with open(MODEL_DIR / "svd.pkl", "rb") as f:
     svd = pickle.load(f)
 
+MIN_POOL_SIZE = 200
+MAX_POOL_SIZE = 500
 
-def get_vector(movie_id):
+
+def _get_vector(movie_id):
     idx = id_to_index.get(movie_id)
     return movie_matrix[idx] if idx is not None else None
 
 
-def get_rating(movie_id):
+def _get_rating(movie_id):
     return movie_ratings.get(movie_id)
 
 
-def get_popularity(movie_id):
+def _get_popularity(movie_id):
     return movie_popularity.get(movie_id)
 
 
-def build_movie_text(details, credits):
+def _build_movie_text(details, credits):
     crew = credits.get("crew", [])
     cast = credits.get("cast", [])
 
     def token(name):
         return name.replace(" ", "_")
 
-    fields = {
-        "genres": " ".join(token(genre["name"]) for genre in details.get("genres", [])),
-        "cast": " ".join(token(member["name"]) for member in cast),
-        "overview": details.get("overview", ""),
-        "director": token(
-            next(
-                (member["name"] for member in crew if member.get("job") == "Director"),
-                "",
-            )
-        ),
-        "writers": " ".join(
-            token(member["name"])
-            for member in crew
-            if member.get("department") == "Writing"
-        ),
-    }
+    director = next((m["name"] for m in crew if m.get("job") == "Director"), None)
+    parts = [
+        " ".join(token(g["name"]) for g in details.get("genres", [])),
+        " ".join(token(m["name"]) for m in cast),
+        token(director) if director else "",
+        " ".join(token(m["name"]) for m in crew if m.get("department") == "Writing"),
+        details.get("overview", ""),
+    ]
 
-    return " ".join(fields.values())
+    return " ".join(filter(None, parts))
 
 
-def compute_text_vector(text):
+def _compute_text_vector(text):
     tfidf = vectorizer.transform([text])
     vector = svd.transform(tfidf)
 
     return normalize(vector)[0]
 
 
-def most_similar(vec, candidate_vectors):
+async def _resolve_vector(id):
+    # Try and lookup the vector from the list produced by the training data
+    vector = _get_vector(id)
+
+    if vector is not None:
+        return vector
+
+    # Since this movie wasnt in the training data, we need to fetch the details
+    # to create the text representation + vector.
+    [details, credits] = await asyncio.gather(
+        tmdb_get(f"/3/movie/{id}"),
+        tmdb_get(f"/3/movie/{id}/credits"),
+    )
+    text = _build_movie_text(details, credits)
+
+    return _compute_text_vector(text)
+
+
+def _most_similar(vec, candidate_vectors):
     return int(np.argmax([np.dot(vec, c) for c in candidate_vectors]))
 
 
-def compute_pref_vector(liked_vectors, disliked_vectors):
+def _compute_pref_vector(liked_vectors, disliked_vectors):
     pref = np.mean(liked_vectors, axis=0)
 
     if disliked_vectors:
@@ -89,13 +105,91 @@ def compute_pref_vector(liked_vectors, disliked_vectors):
     return pref / norm if norm > 0 else pref
 
 
-def recommend(pref):
-    return movie_matrix @ pref
+def _normalize_range(vals):
+    lo, hi = min(vals), max(vals)
+    return lo, hi - lo or 1.0
 
 
-def top_terms(pref, n=15):
+def _rank_weighted(candidates, imdb_weight, popular_weight):
+    min_s, span_s = _normalize_range([s for _, s in candidates])
+    min_i, span_i = _normalize_range([_get_rating(id) or 0 for id, _ in candidates])
+    min_p, span_p = _normalize_range([_get_popularity(id) or 0 for id, _ in candidates])
+
+    return sorted(
+        candidates,
+        reverse=True,
+        key=lambda x: (
+            (x[1] - min_s) / span_s
+            + imdb_weight * ((_get_rating(x[0]) or 0) - min_i) / span_i
+            + popular_weight * ((_get_popularity(x[0]) or 0) - min_p) / span_p
+        ),
+    )
+
+
+def _rank(
+    liked_vectors,
+    disliked_vectors,
+    excluded,
+    imdb_weight=0.0,
+    popular_weight=0.0,
+    pool_size=0.0,
+):
+    pref = _compute_pref_vector(liked_vectors, disliked_vectors)
+    scores = movie_matrix @ pref
+    pool = int(MIN_POOL_SIZE + pool_size * (MAX_POOL_SIZE - MIN_POOL_SIZE))
+    candidates = sorted(
+        (
+            (movie_ids[i], float(scores[i]))
+            for i in range(len(movie_ids))
+            if movie_ids[i] not in excluded
+        ),
+        key=lambda x: -x[1],
+    )[:pool]
+
+    if imdb_weight > 0 or popular_weight > 0:
+        candidates = _rank_weighted(candidates, imdb_weight, popular_weight)
+
+    return pref, candidates[:10]
+
+
+def _top_terms(pref, n=15):
     tfidf_vec = svd.inverse_transform(pref.reshape(1, -1))[0]
     feature_names = vectorizer.get_feature_names_out()
     top_indices = np.argsort(tfidf_vec)[-n:][::-1]
 
     return [feature_names[i] for i in top_indices]
+
+
+async def get_recommendations(
+    liked_ids, disliked_ids, imdb_weight=0.0, popular_weight=0.0, pool_size=0.0
+):
+    all_ids = list(dict.fromkeys([*liked_ids, *disliked_ids]))
+    all_vectors = dict(
+        zip(all_ids, await asyncio.gather(*[_resolve_vector(id) for id in all_ids]))
+    )
+
+    liked_vectors = [all_vectors[id] for id in liked_ids]
+    disliked_vectors = [all_vectors[id] for id in disliked_ids]
+    excluded = set(liked_ids) | set(disliked_ids)
+
+    pref, top = _rank(
+        liked_vectors,
+        disliked_vectors,
+        excluded,
+        imdb_weight,
+        popular_weight,
+        pool_size,
+    )
+
+    rec_vectors = [_get_vector(id) for id, _ in top]
+    movies = await asyncio.gather(*[tmdb_get(f"/3/movie/{id}") for id, _ in top])
+    results = [
+        {
+            "_rec_similar_to": liked_ids[_most_similar(rec_vec, liked_vectors)],
+            "_imdb_rating": _get_rating(id),
+            **movie,
+        }
+        for movie, (id, score), rec_vec in zip(movies, top, rec_vectors)
+    ]
+
+    return {"_rec_terms": _top_terms(pref), "results": results}

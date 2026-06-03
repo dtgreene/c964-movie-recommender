@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
 import { cn } from '../utils';
-import { MovieResults } from './MovieResults';
+import { MovieGrid } from './MovieGrid';
+import { QueryState } from './QueryState';
 
 /**
  * Show a score gauging how sharp the user's signal is. Something like weak,
@@ -60,12 +61,9 @@ export const SearchTab = ({ isActive }) => {
       </div>
       <div className="mt-6">
         {params.query ? (
-          <MovieResults
-            data={data}
-            isLoading={isPending}
-            noResultsMessage={noResultsMessage}
-            error={error}
-          />
+          <QueryState isLoading={isPending} error={error}>
+            <MovieGrid data={data} noResultsMessage={noResultsMessage} />
+          </QueryState>
         ) : (
           <div className="text-xl text-zinc-500">
             Find movies you enjoy to get personalized recommendations.
