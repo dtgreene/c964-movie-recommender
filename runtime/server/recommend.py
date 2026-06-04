@@ -12,12 +12,12 @@ MODEL_DIR = Path(__file__).parent / "./model"
 with open(MODEL_DIR / "metadata.json") as f:
     meta = json.load(f)
 
-movie_ids = json.loads((MODEL_DIR / "movie_ids.json").read_text())
-id_to_index = {id: i for i, id in enumerate(movie_ids)}
-
-movie_matrix = np.fromfile(MODEL_DIR / "movie_vectors.bin", dtype=np.float32).reshape(
+_movie_ids = json.loads((MODEL_DIR / "movie_ids.json").read_text())
+_id_to_index = {id: i for i, id in enumerate(_movie_ids)}
+_movie_matrix = np.fromfile(MODEL_DIR / "movie_vectors.bin", dtype=np.float32).reshape(
     meta["n_movies"], meta["n_components"]
 )
+
 with open(MODEL_DIR / "movie_ratings.json") as f:
     movie_ratings = {int(k): v for k, v in json.load(f).items()}
 
@@ -35,8 +35,8 @@ MAX_POOL_SIZE = 500
 
 
 def _get_vector(movie_id):
-    idx = id_to_index.get(movie_id)
-    return movie_matrix[idx] if idx is not None else None
+    idx = _id_to_index.get(movie_id)
+    return _movie_matrix[idx] if idx is not None else None
 
 
 def _get_rating(movie_id):
@@ -135,13 +135,13 @@ def _rank(
     pool_size=0.0,
 ):
     pref = _compute_pref_vector(liked_vectors, disliked_vectors)
-    scores = movie_matrix @ pref
+    scores = _movie_matrix @ pref
     pool = int(MIN_POOL_SIZE + pool_size * (MAX_POOL_SIZE - MIN_POOL_SIZE))
     candidates = sorted(
         (
-            (movie_ids[i], float(scores[i]))
-            for i in range(len(movie_ids))
-            if movie_ids[i] not in excluded
+            (_movie_ids[i], float(scores[i]))
+            for i in range(len(_movie_ids))
+            if _movie_ids[i] not in excluded
         ),
         key=lambda x: -x[1],
     )[:pool]
@@ -152,7 +152,16 @@ def _rank(
     return pref, candidates[:10]
 
 
-def _top_terms(pref, n=15):
+def _compute_pref_signal(liked_vectors):
+    matrix = np.array(liked_vectors)
+    sims = matrix @ matrix.T
+    n = len(liked_vectors)
+    mask = np.triu(np.ones((n, n), dtype=bool), k=1)
+
+    return sims[mask].mean()
+
+
+def _infer_top_terms(pref, n=15):
     tfidf_vec = svd.inverse_transform(pref.reshape(1, -1))[0]
     feature_names = vectorizer.get_feature_names_out()
     top_indices = np.argsort(tfidf_vec)[-n:][::-1]
@@ -185,11 +194,23 @@ async def get_recommendations(
     movies = await asyncio.gather(*[tmdb_get(f"/3/movie/{id}") for id, _ in top])
     results = [
         {
-            "_rec_similar_to": liked_ids[_most_similar(rec_vec, liked_vectors)],
+            "_similar_to": liked_ids[_most_similar(rec_vec, liked_vectors)],
             "_imdb_rating": _get_rating(id),
             **movie,
         }
         for movie, (id, score), rec_vec in zip(movies, top, rec_vectors)
     ]
 
-    return {"_rec_terms": _top_terms(pref), "results": results}
+    pref_signal = _compute_pref_signal(liked_vectors)
+    pref_display = "weak"
+
+    if pref_signal >= 0.45:
+        pref_display = "strong"
+    elif pref_signal >= 0.25:
+        pref_display = "moderate"
+
+    return {
+        "_pref_signal": {"value": float(pref_signal), "display": pref_display},
+        "_top_terms": _infer_top_terms(pref),
+        "results": results,
+    }
