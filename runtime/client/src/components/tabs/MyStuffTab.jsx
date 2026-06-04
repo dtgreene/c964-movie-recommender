@@ -1,13 +1,13 @@
 import { Fragment } from 'react';
 import { useSnapshot } from 'valtio';
 
-import { groupByRating, userState } from '../store';
-import { MovieThumbnail } from './MovieThumbnail';
-import { BrowseSuggestion } from './BrowseSuggestion';
+import { groupByRating, userState } from 'store';
+import { MovieCard } from '../MovieCard';
+import { BrowseSuggestion } from '../BrowseSuggestion';
 
 export const MyStuffTab = ({ onTabChange }) => {
   const userSnap = useSnapshot(userState);
-  const { liked, disliked } = groupByRating(userSnap);
+  const { liked, disliked } = groupByRating(userSnap.myStuff);
   const hasRatings = liked.length > 0 || disliked.length > 0;
 
   return (
@@ -23,7 +23,7 @@ export const MyStuffTab = ({ onTabChange }) => {
           <div className="text-xl font-semibold mb-2">Liked</div>
           <div className="flex flex-wrap gap-4">
             {liked.map((movie) => (
-              <MovieThumbnail key={movie.id} movie={movie} />
+              <MovieCard key={movie.id} movie={movie} />
             ))}
           </div>
         </div>
@@ -33,7 +33,7 @@ export const MyStuffTab = ({ onTabChange }) => {
           <div className="text-xl font-semibold mb-2">Disliked</div>
           <div className="flex flex-wrap gap-4">
             {disliked.map((movie) => (
-              <MovieThumbnail key={movie.id} movie={movie} />
+              <MovieCard key={movie.id} movie={movie} />
             ))}
           </div>
         </div>

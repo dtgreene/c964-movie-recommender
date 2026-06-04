@@ -1,4 +1,4 @@
-import { MovieThumbnail } from './MovieThumbnail';
+import { MovieCard } from './MovieCard';
 
 export const MovieGrid = ({
   data,
@@ -8,17 +8,13 @@ export const MovieGrid = ({
   const hasResults = data && data.length > 0;
 
   if (!hasResults) {
-    <div className="my-8">{noResultsMessage}</div>;
+    return <div className="my-8">{noResultsMessage}</div>;
   }
 
   return (
-    <div className="flex flex-wrap gap-4">
+    <div className="flex flex-wrap gap-4 ml-2">
       {data?.map((movie) => (
-        <MovieThumbnail
-          key={movie.id}
-          movie={movie}
-          disableRating={disableRating}
-        />
+        <MovieCard key={movie.id} movie={movie} disableRating={disableRating} />
       ))}
     </div>
   );

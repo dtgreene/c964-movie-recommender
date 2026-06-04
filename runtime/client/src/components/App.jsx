@@ -6,13 +6,16 @@ import {
   SearchIcon,
   WandSparklesIcon,
 } from 'lucide-react';
+import { BorderBeam } from 'border-beam';
+import { useSnapshot } from 'valtio';
 
-import { cn } from '../utils';
-import { queryClient } from '../query';
-import { MyStuffTab } from './MyStuffTab';
-import { SearchTab } from './SearchTab';
-import { PopularTab } from './PopularTab';
-import { RecommendationsTab } from './RecommendationsTab';
+import { cn, useTimedFlag } from 'utils';
+import { queryClient } from 'query';
+import { userState, groupByRating } from 'store';
+import { MyStuffTab } from './tabs/MyStuffTab';
+import { SearchTab } from './tabs/SearchTab';
+import { PopularTab } from './tabs/PopularTab';
+import { RecommendationsTab } from './tabs/RecommendationsTab';
 
 const Tabs = Object.freeze({
   POPULAR: 'popular',
@@ -23,7 +26,7 @@ const Tabs = Object.freeze({
 
 const TabPanel = ({ render, isActive }) => (
   <div
-    className={cn('max-w-240 my-12 flex-1', {
+    className={cn('my-12 flex-1', {
       hidden: !isActive,
     })}
   >
@@ -31,14 +34,15 @@ const TabPanel = ({ render, isActive }) => (
   </div>
 );
 
-const TabButton = ({ children, onClick, isActive }) => (
+const TabButton = ({ children, onClick, isActive, className }) => (
   <button
     onClick={onClick}
     className={cn(
-      'text-nowrap cursor-pointer w-full px-8 py-2 flex justify-center items-center gap-2 border-b-4 transition-colors hover:bg-zinc-100 border-zinc-200',
+      'text-nowrap cursor-pointer w-1/4 px-8 py-2 flex justify-center items-center gap-2 border rounded-full transition-colors hover:bg-zinc-100 border-zinc-200',
       {
         'border-sky-600 text-sky-600': isActive,
       },
+      className,
     )}
   >
     {children}
@@ -46,6 +50,11 @@ const TabButton = ({ children, onClick, isActive }) => (
 );
 
 export const App = () => {
+  const userSnap = useSnapshot(userState);
+  const { liked, disliked } = groupByRating(userSnap.myStuff);
+  const hasMinLiked = liked.length >= 5;
+  const borderBeamActive = useTimedFlag(hasMinLiked);
+
   const [tab, setTab] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('tab') ?? Tabs.POPULAR;
@@ -63,8 +72,8 @@ export const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex justify-center">
-        <div className="max-w-400 flex-1">
-          <div className="flex justify-evenly w-full">
+        <div className="max-w-300 flex-1">
+          <div className="flex justify-evenly w-full gap-4">
             <TabButton
               onClick={() => handleTabChange(Tabs.POPULAR)}
               isActive={tab === Tabs.POPULAR}
@@ -85,14 +94,24 @@ export const App = () => {
             >
               <BookmarkIcon className="shrink-0" size="20" />
               <span>My Stuff</span>
+              {liked.length > 0 && (
+                <div className="rounded-full border border-emerald-500 text-emerald-500 w-6 h-6 relative">
+                  <span className="absolute left-0 top-0 w-full h-full flex justify-center items-center font-mono">
+                    {liked.length}
+                  </span>
+                </div>
+              )}
             </TabButton>
-            <TabButton
-              onClick={() => handleTabChange(Tabs.RECOMMENDATIONS)}
-              isActive={tab === Tabs.RECOMMENDATIONS}
-            >
-              <WandSparklesIcon className="shrink-0" size="20" />
-              <span>Recommendations</span>
-            </TabButton>
+            <BorderBeam className="w-1/4" active={borderBeamActive}>
+              <TabButton
+                onClick={() => handleTabChange(Tabs.RECOMMENDATIONS)}
+                isActive={tab === Tabs.RECOMMENDATIONS}
+                className="w-full"
+              >
+                <WandSparklesIcon className="shrink-0" size="20" />
+                <span>Recommendations</span>
+              </TabButton>
+            </BorderBeam>
           </div>
           <div className="flex justify-center">
             <TabPanel

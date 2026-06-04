@@ -1,19 +1,10 @@
 import { useRef, useState, Fragment } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 
-import { cn } from '../utils';
-import { MovieGrid } from './MovieGrid';
-import { QueryState } from './QueryState';
-
-/**
- * Show a score gauging how sharp the user's signal is. Something like weak,
- * medium, strong. A natural measure is the average pairwise cosine similarity
- * among their liked vectors. If all their liked movies cluster tightly in
- * vector space, the signal is strong (they have a consistent taste). If the
- * vectors are scattered, the signal is weak (eclectic taste, recommendations
- * will be less targeted)
- */
+import { api } from 'query';
+import { cn } from 'utils';
+import { MovieGrid } from '../MovieGrid';
+import { QueryState } from '../QueryState';
 
 export const SearchTab = ({ isActive }) => {
   const [params, setParams] = useState({ query: '', page: 1 });
@@ -22,7 +13,7 @@ export const SearchTab = ({ isActive }) => {
     queryKey: ['search', params.query, params.page],
     queryFn: async () => {
       const options = { params: { query: params.query, page: params.page } };
-      const response = await axios.get('/api/search', options);
+      const response = await api.get('/api/search', options);
 
       return response.data.results;
     },

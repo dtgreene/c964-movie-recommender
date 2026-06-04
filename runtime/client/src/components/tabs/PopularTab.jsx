@@ -1,18 +1,18 @@
 import { Fragment, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import { api } from 'query';
 
-import { MovieGrid } from './MovieGrid';
-import { cn } from '../utils';
-import { BinarySwitch } from './BinarySwitch';
-import { QueryState } from './QueryState';
+import { cn } from 'utils';
+import { MovieGrid } from '../MovieGrid';
+import { BinarySwitch } from '../BinarySwitch';
+import { QueryState } from '../QueryState';
 
 export const PopularTab = ({ isActive }) => {
   const [params, setParams] = useState({ key: 'trending', page: 1 });
   const { data, isPending, error } = useQuery({
     queryKey: [params.key],
     queryFn: async () => {
-      const response = await axios.get(`/api/${params.key}`);
+      const response = await api.get(`/api/${params.key}`);
       return response.data.results;
     },
     enabled: isActive,

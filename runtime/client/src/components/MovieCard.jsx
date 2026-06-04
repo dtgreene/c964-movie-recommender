@@ -1,10 +1,12 @@
 import { Fragment } from 'react';
 import { ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
-
-import { userState } from '../store';
 import { useSnapshot } from 'valtio';
 
-export const MovieThumbnail = ({ movie, disableRating }) => {
+import { userState } from 'store';
+import { formatReleaseDate } from 'utils';
+import { MoviePoster } from './MoviePoster';
+
+export const MovieCard = ({ movie, disableRating }) => {
   const userSnap = useSnapshot(userState);
 
   const { id, title, release_date, poster_path } = movie;
@@ -34,12 +36,11 @@ export const MovieThumbnail = ({ movie, disableRating }) => {
   };
 
   return (
-    <div className="border border-zinc-300 shadow-lg shadow-zinc-300 rounded flex flex-col overflow-hidden w-44">
+    <div className="border border-zinc-300 shadow-lg shadow-zinc-300 rounded flex flex-col overflow-hidden w-46">
       <div className="w-full aspect-2/3 shrink-0 relative group">
-        <img
-          src={`http://image.tmdb.org/t/p/w300${poster_path}`}
-          className="w-full h-full"
-          alt="Movie poster"
+        <MoviePoster
+          posterPath={poster_path}
+          className="w-full h-full object-cover"
         />
         {!disableRating && (
           <Fragment>
@@ -81,13 +82,7 @@ export const MovieThumbnail = ({ movie, disableRating }) => {
             {title}
           </a>
         </div>
-        <div>
-          {new Date(release_date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </div>
+        <div>{formatReleaseDate(release_date)}</div>
       </div>
     </div>
   );

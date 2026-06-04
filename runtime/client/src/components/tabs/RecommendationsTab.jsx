@@ -3,15 +3,22 @@ import { useSnapshot } from 'valtio';
 import { useQuery } from '@tanstack/react-query';
 import { Tooltip } from 'react-tooltip';
 import { InfoIcon } from 'lucide-react';
-import axios from 'axios';
 
-import { groupByRating, userState } from '../store';
-import { useDebounce } from '../utils';
-import { MovieGrid } from './MovieGrid';
-import { BinarySwitch } from './BinarySwitch';
-import { BrowseSuggestion } from './BrowseSuggestion';
-import { InfoTooltip } from './InfoTooltip';
-import { QueryState } from './QueryState';
+import { useDebounce } from 'utils';
+import { api } from 'query';
+import { groupByRating, userState } from 'store';
+import { BinarySwitch } from '../BinarySwitch';
+import { BrowseSuggestion } from '../BrowseSuggestion';
+import { InfoTooltip } from '../InfoTooltip';
+import { QueryState } from '../QueryState';
+import { RecommendationsList } from '../RecommendationsList';
+
+/*
+Taste Signal measures how closely related your liked movies are to each other. A
+strong signal means your picks cluster tightly in the same genre, style, or
+theme — giving the recommender a clear target. A weak signal means your
+selections are not very related and the recommendations will be less accurate.
+*/
 
 export const RecommendationsTab = ({ isActive, onTabChange }) => {
   const [isList, setIsList] = useState(true);
@@ -22,7 +29,7 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
   const debouncePopularWeight = useDebounce(popularWeight, 400);
   const debouncedPoolSize = useDebounce(poolSize, 400);
 
-  const { liked, disliked } = groupByRating(userSnap);
+  const { liked, disliked } = groupByRating(userSnap.myStuff);
   const movieIds = liked.concat(disliked).map((movie) => movie.id);
   const minLikedDelta = 5 - liked.length;
   const hasMinLiked = minLikedDelta <= 0;
@@ -48,7 +55,7 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
       params.set('tmdb_popular_weight', debouncePopularWeight);
       params.set('pool_size', debouncedPoolSize);
 
-      const response = await axios.get(`/api/recommendations?${params}`);
+      const response = await api.get(`/api/recommendations?${params}`);
       return response.data;
     },
     enabled: hasMinLiked && isActive,
@@ -60,12 +67,6 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
         <Fragment>
           {!isPending && (
             <Fragment>
-              <BinarySwitch
-                labelA="List"
-                labelB="Grid"
-                isActive={isList}
-                onChange={(value) => setIsList(value)}
-              />
               <div className="flex justify-between w-full mt-6">
                 <div>
                   <div className="font-semibold flex items-center gap-2">
@@ -126,11 +127,14 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
                   <div className="font-semibold flex items-center gap-2">
                     <span>Rank Pool Size</span>
                     <InfoTooltip id="info-pool-size">
-                      <div>
+                      <div className="mb-2">
                         Before ranking, the recommender narrows the full catalog
                         down to a pool of the closest similarity matches. A
                         larger pool gives the IMDb and popularity weights more
                         candidates to reorder.
+                      </div>
+                      <div>
+                        The slider changes the pool size from 200 to 500.
                       </div>
                     </InfoTooltip>
                   </div>
@@ -148,13 +152,9 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
               </div>
             </Fragment>
           )}
-          <div className="mt-6">
+          <div className="mt-6 w-full">
             <QueryState isLoading={isPending} error={error}>
-              {isList ? (
-                <div>List</div>
-              ) : (
-                <MovieGrid data={data?.results} disableRating />
-              )}
+              <RecommendationsList data={data?.results} />
             </QueryState>
           </div>
         </Fragment>

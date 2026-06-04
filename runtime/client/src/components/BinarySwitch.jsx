@@ -1,4 +1,4 @@
-import { cn } from '../utils';
+import { cn } from 'utils';
 
 export const BinarySwitch = ({ labelA, labelB, isActive, onChange }) => (
   <div className="relative rounded-full bg-zinc-200 p-1">
