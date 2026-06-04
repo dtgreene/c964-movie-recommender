@@ -3,9 +3,9 @@ import { proxy, snapshot, subscribe } from 'valtio';
 export const userState = createStorageProxy('user-state', {
   myStuff: {}, // { [movieId]: { rating: 'liked' | 'disliked', movie: {...} } }
   recommendParams: {
-    voteWeight: '0.5',
-    popularWeight: '0.5',
-    poolSize: '1.0',
+    voteWeight: '0.25',
+    popularWeight: '0.25',
+    poolSize: '0.5',
   },
 });
 

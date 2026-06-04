@@ -12,17 +12,15 @@ MODEL_DIR = Path(__file__).parent / "./model"
 with open(MODEL_DIR / "metadata.json") as f:
     meta = json.load(f)
 
-_movie_ids = json.loads((MODEL_DIR / "movie_ids.json").read_text())
+with open(MODEL_DIR / "movie_meta.json") as f:
+    _meta_file = json.load(f)
+
+_movie_ids = _meta_file["ids"]
 _id_to_index = {id: i for i, id in enumerate(_movie_ids)}
+_movie_data = {int(k): v for k, v in _meta_file["movies"].items()}
 _movie_matrix = np.fromfile(MODEL_DIR / "movie_vectors.bin", dtype=np.float32).reshape(
     meta["n_movies"], meta["n_components"]
 )
-
-with open(MODEL_DIR / "movie_ratings.json") as f:
-    movie_ratings = {int(k): v for k, v in json.load(f).items()}
-
-with open(MODEL_DIR / "movie_popularity.json") as f:
-    movie_popularity = {int(k): v for k, v in json.load(f).items()}
 
 with open(MODEL_DIR / "vectorizer.pkl", "rb") as f:
     vectorizer = pickle.load(f)
@@ -40,11 +38,18 @@ def _get_vector(movie_id):
 
 
 def _get_rating(movie_id):
-    return movie_ratings.get(movie_id)
+    m = _movie_data.get(movie_id)
+    return m["rating"] if m else None
 
 
 def _get_popularity(movie_id):
-    return movie_popularity.get(movie_id)
+    m = _movie_data.get(movie_id)
+    return m["popularity"] if m else None
+
+
+def _get_ratings_count(movie_id):
+    m = _movie_data.get(movie_id)
+    return m["ratings_count"] if m else None
 
 
 def _build_movie_text(details, credits):
@@ -152,15 +157,6 @@ def _rank(
     return pref, candidates[:10]
 
 
-def _compute_pref_signal(liked_vectors):
-    matrix = np.array(liked_vectors)
-    sims = matrix @ matrix.T
-    n = len(liked_vectors)
-    mask = np.triu(np.ones((n, n), dtype=bool), k=1)
-
-    return sims[mask].mean()
-
-
 def _infer_top_terms(pref, n=15):
     tfidf_vec = svd.inverse_transform(pref.reshape(1, -1))[0]
     feature_names = vectorizer.get_feature_names_out()
@@ -196,21 +192,13 @@ async def get_recommendations(
         {
             "_similar_to": liked_ids[_most_similar(rec_vec, liked_vectors)],
             "_imdb_rating": _get_rating(id),
+            "_imdb_rating_count": _get_ratings_count(id),
             **movie,
         }
         for movie, (id, score), rec_vec in zip(movies, top, rec_vectors)
     ]
 
-    pref_signal = _compute_pref_signal(liked_vectors)
-    pref_display = "weak"
-
-    if pref_signal >= 0.45:
-        pref_display = "strong"
-    elif pref_signal >= 0.25:
-        pref_display = "moderate"
-
     return {
-        "_pref_signal": {"value": float(pref_signal), "display": pref_display},
         "_top_terms": _infer_top_terms(pref),
         "results": results,
     }

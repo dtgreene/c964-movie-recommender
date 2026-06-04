@@ -67,8 +67,8 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
         <Fragment>
           {!isPending && (
             <Fragment>
-              <div className="flex justify-between w-full mt-6">
-                <div>
+              <div className="flex w-full mt-6 md:flex-row md:justify-between flex-col items-center md:gap-8 gap-4">
+                <div className="w-full">
                   <div className="font-semibold flex items-center gap-2">
                     <span>IMDb Vote Weight</span>
                     <InfoTooltip id="info-vote-weight">
@@ -89,13 +89,14 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
                     min="0"
                     max="1"
                     step="0.25"
+                    className="w-full"
                     value={voteWeight}
                     onChange={(event) => {
                       userState.recommendParams.voteWeight = event.target.value;
                     }}
                   />
                 </div>
-                <div>
+                <div className="w-full">
                   <div className="font-semibold flex items-center gap-2">
                     <span>TMDb Popular Weight</span>
                     <InfoTooltip id="info-popular-weight">
@@ -116,6 +117,7 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
                     min="0"
                     max="1"
                     step="0.25"
+                    className="w-full"
                     value={popularWeight}
                     onChange={(event) => {
                       userState.recommendParams.popularWeight =
@@ -123,7 +125,7 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
                     }}
                   />
                 </div>
-                <div>
+                <div className="w-full">
                   <div className="font-semibold flex items-center gap-2">
                     <span>Rank Pool Size</span>
                     <InfoTooltip id="info-pool-size">
@@ -143,6 +145,7 @@ export const RecommendationsTab = ({ isActive, onTabChange }) => {
                     min="0"
                     max="1"
                     step="0.25"
+                    className="w-full"
                     value={poolSize}
                     onChange={(event) => {
                       userState.recommendParams.poolSize = event.target.value;

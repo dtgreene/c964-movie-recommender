@@ -82,26 +82,21 @@ out = SCRIPT_DIR.parent / "runtime" / "server" / "model"
 out.mkdir(exist_ok=True)
 
 vectors.astype(np.float32).tofile(out / "movie_vectors.bin")
-ratings = {
-    int(id): round(float(r), 1)
-    for id, r in zip(df["id"], df["imdb_rating"])
-    if pd.notna(r)
+movie_meta = {
+    "ids": [int(df["id"].iloc[i]) for i in range(len(df))],
+    "movies": {
+        str(int(id)): {
+            "rating": round(float(r), 1) if pd.notna(r) else None,
+            "popularity": round(float(p), 3) if pd.notna(p) else None,
+            "ratings_count": int(c) if pd.notna(c) else None,
+        }
+        for id, r, p, c in zip(
+            df["id"], df["imdb_rating"], df["popularity"], df["imdb_votes"]
+        )
+    },
 }
-with open(out / "movie_ratings.json", "w") as f:
-    json.dump(ratings, f)
-
-popularity = {
-    int(id): round(float(p), 3)
-    for id, p in zip(df["id"], df["popularity"])
-    if pd.notna(p)
-}
-with open(out / "movie_popularity.json", "w") as f:
-    json.dump(popularity, f)
-
-ids = [int(df["id"].iloc[i]) for i in range(len(df))]
-
-with open(out / "movie_ids.json", "w") as f:
-    json.dump(ids, f)
+with open(out / "movie_meta.json", "w") as f:
+    json.dump(movie_meta, f)
 
 metadata = {
     "n_components": svd.n_components,

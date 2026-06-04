@@ -38,7 +38,7 @@ const TabButton = ({ children, onClick, isActive, className }) => (
   <button
     onClick={onClick}
     className={cn(
-      'text-nowrap cursor-pointer w-1/4 px-8 py-2 flex justify-center items-center gap-2 border rounded-full transition-colors hover:bg-zinc-100 border-zinc-200',
+      'text-nowrap cursor-pointer w-1/4 p-2 flex justify-center items-center gap-2 border-2 rounded-full transition-colors hover:bg-zinc-100 border-zinc-200',
       {
         'border-sky-600 text-sky-600': isActive,
       },

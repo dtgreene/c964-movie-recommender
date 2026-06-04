@@ -20,6 +20,7 @@
     "border-beam": "^1.0.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.17.0",
+    "number-abbreviate": "^2.0.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-tooltip": "^6.0.6",
