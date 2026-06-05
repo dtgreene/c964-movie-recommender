@@ -4,6 +4,7 @@ __pycache__/
 
 trainer/dataset/
 runtime/server/model/
+runtime/server/public/
 
 node_modules/
 

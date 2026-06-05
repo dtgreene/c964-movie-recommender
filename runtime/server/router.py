@@ -1,23 +1,35 @@
 import os
+import json
+from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import APIKeyHeader
 
-from recommend import get_recommendations
+from recommend import get_recommendations, get_taste
 from tmdb import tmdb_get
 
+MODEL_DIR = Path(__file__).parent / "model"
 
-_api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+with open(MODEL_DIR / "visuals_meta.json") as f:
+    _visuals_meta = json.load(f)
+
+
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 # Require API requests, except for static files, to provide a "secret" x-api-key
 # header. Again, only a deterrent but easy enough to implement.
 
 
-async def _verify_api_key(key: str = Depends(_api_key_header)):
+async def _verify_api_key(key: str = Depends(api_key_header)):
     if key != os.getenv("API_KEY"):
         raise HTTPException(status_code=403, detail="Forbidden")
 
 
 router = APIRouter(prefix="/api", dependencies=[Depends(_verify_api_key)])
+
+
+@router.get("/visuals-meta")
+async def visuals_meta():
+    return _visuals_meta
 
 
 @router.get("/search")
@@ -40,6 +52,15 @@ async def movie(movie_id: int):
     return await tmdb_get(f"/3/movie/{movie_id}")
 
 
+@router.get("/taste")
+async def taste(liked: list[int] = Query(default=[])):
+    if not liked:
+        raise HTTPException(
+            status_code=400, detail="At least one liked movie is required."
+        )
+    return await get_taste(liked)
+
+
 @router.get("/recommendations")
 async def recommendations(
     liked: list[int] = Query(default=[]),
@@ -47,6 +68,7 @@ async def recommendations(
     imdb_vote_weight: float = Query(default=0.0, ge=0.0, le=1.0),
     tmdb_popular_weight: float = Query(default=0.0, ge=0.0, le=1.0),
     pool_size: float = Query(default=0.0, ge=0.0, le=1.0),
+    dislike_weight: float = Query(default=0.0, ge=0.0, le=1.0),
 ):
     if len(liked) < 5:
         raise HTTPException(
@@ -54,5 +76,10 @@ async def recommendations(
         )
 
     return await get_recommendations(
-        liked, disliked, imdb_vote_weight, tmdb_popular_weight, pool_size
+        liked,
+        disliked,
+        imdb_vote_weight,
+        tmdb_popular_weight,
+        pool_size,
+        dislike_weight,
     )

@@ -48,7 +48,6 @@ def prepare(data_dir):
     filtered = filtered.copy()
     split_cols = [
         "genres",
-        "cast",
         "director",
         "writers",
     ]

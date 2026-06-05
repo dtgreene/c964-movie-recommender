@@ -8,7 +8,7 @@ import { QueryState } from '../QueryState';
 
 export const SearchTab = ({ isActive }) => {
   const [params, setParams] = useState({ query: '', page: 1 });
-
+  const queryEnabled = !!params.query && isActive;
   const { data, isPending, error } = useQuery({
     queryKey: ['search', params.query, params.page],
     queryFn: async () => {
@@ -17,7 +17,7 @@ export const SearchTab = ({ isActive }) => {
 
       return response.data.results;
     },
-    enabled: !!params.query && isActive,
+    enabled: queryEnabled,
   });
 
   const handleSubmit = (event) => {
@@ -35,7 +35,7 @@ export const SearchTab = ({ isActive }) => {
       <div className="flex justify-between items-center w-full">
         <form
           onSubmit={handleSubmit}
-          className="flex items-center gap-2 w-full"
+          className="flex items-center gap-4 w-full"
         >
           <input
             type="text"
@@ -45,18 +45,19 @@ export const SearchTab = ({ isActive }) => {
           <button
             type="submit"
             className="rounded-full border border-sky-600 text-sky-600 px-6 py-2 cursor-pointer hover:opacity-80 transition-opacity"
+            disabled={queryEnabled && isPending}
           >
             Search
           </button>
         </form>
       </div>
-      <div className="mt-6">
+      <div className="mt-6 w-full">
         {params.query ? (
           <QueryState isLoading={isPending} error={error}>
             <MovieGrid data={data} noResultsMessage={noResultsMessage} />
           </QueryState>
         ) : (
-          <div className="text-xl text-zinc-500">
+          <div className="text-xl text-zinc-500 text-center">
             Find movies you enjoy to get personalized recommendations.
           </div>
         )}

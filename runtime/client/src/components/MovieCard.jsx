@@ -36,7 +36,7 @@ export const MovieCard = ({ movie, disableRating }) => {
   };
 
   return (
-    <div className="border border-zinc-300 shadow-lg shadow-zinc-300 rounded flex flex-col overflow-hidden w-46">
+    <div className="border border-zinc-300 shadow-lg shadow-zinc-300 rounded flex flex-col overflow-hidden w-48">
       <div className="w-full aspect-2/3 shrink-0 relative group">
         <MoviePoster
           posterPath={poster_path}

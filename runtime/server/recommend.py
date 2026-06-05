@@ -100,11 +100,11 @@ def _most_similar(vec, candidate_vectors):
     return int(np.argmax([np.dot(vec, c) for c in candidate_vectors]))
 
 
-def _compute_pref_vector(liked_vectors, disliked_vectors):
+def _compute_pref_vector(liked_vectors, disliked_vectors, dislike_weight):
     pref = np.mean(liked_vectors, axis=0)
 
     if disliked_vectors:
-        pref -= np.mean(disliked_vectors, axis=0) * 0.5
+        pref -= np.mean(disliked_vectors, axis=0) * dislike_weight
 
     norm = np.linalg.norm(pref)
     return pref / norm if norm > 0 else pref
@@ -135,11 +135,12 @@ def _rank(
     liked_vectors,
     disliked_vectors,
     excluded,
-    imdb_weight=0.0,
-    popular_weight=0.0,
-    pool_size=0.0,
+    imdb_weight,
+    popular_weight,
+    pool_size,
+    dislike_weight,
 ):
-    pref = _compute_pref_vector(liked_vectors, disliked_vectors)
+    pref = _compute_pref_vector(liked_vectors, disliked_vectors, dislike_weight)
     scores = _movie_matrix @ pref
     pool = int(MIN_POOL_SIZE + pool_size * (MAX_POOL_SIZE - MIN_POOL_SIZE))
     candidates = sorted(
@@ -161,12 +162,30 @@ def _infer_top_terms(pref, n=15):
     tfidf_vec = svd.inverse_transform(pref.reshape(1, -1))[0]
     feature_names = vectorizer.get_feature_names_out()
     top_indices = np.argsort(tfidf_vec)[-n:][::-1]
+    top_vals = tfidf_vec[top_indices]
+    total = top_vals.sum() or 1.0
 
-    return [feature_names[i] for i in top_indices]
+    return [
+        {"term": feature_names[i], "score": round(float(v / total * 100), 1)}
+        for i, v in zip(top_indices, top_vals)
+    ]
+
+
+async def get_taste(liked_ids):
+    vectors = await asyncio.gather(*[_resolve_vector(id) for id in liked_ids])
+    pref = np.mean(vectors, axis=0)
+    norm = np.linalg.norm(pref)
+    pref = pref / norm if norm > 0 else pref
+    return {"top_terms": _infer_top_terms(pref)}
 
 
 async def get_recommendations(
-    liked_ids, disliked_ids, imdb_weight=0.0, popular_weight=0.0, pool_size=0.0
+    liked_ids,
+    disliked_ids,
+    imdb_weight=0.0,
+    popular_weight=0.0,
+    pool_size=0.0,
+    dislike_weight=0.0,
 ):
     all_ids = list(dict.fromkeys([*liked_ids, *disliked_ids]))
     all_vectors = dict(
@@ -184,6 +203,7 @@ async def get_recommendations(
         imdb_weight,
         popular_weight,
         pool_size,
+        dislike_weight,
     )
 
     rec_vectors = [_get_vector(id) for id, _ in top]
@@ -198,7 +218,4 @@ async def get_recommendations(
         for movie, (id, score), rec_vec in zip(movies, top, rec_vectors)
     ]
 
-    return {
-        "_top_terms": _infer_top_terms(pref),
-        "results": results,
-    }
+    return results

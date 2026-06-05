@@ -6,6 +6,7 @@ export const userState = createStorageProxy('user-state', {
     voteWeight: '0.25',
     popularWeight: '0.25',
     poolSize: '0.5',
+    dislikeWeight: '0.25',
   },
 });
 

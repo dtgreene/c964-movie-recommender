@@ -3,7 +3,12 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "checkJs": false
+    "checkJs": false,
+    "paths": {
+      "utils": ["./runtime/client/src/utils.js"],
+      "store": ["./runtime/client/src/store.js"],
+      "query": ["./runtime/client/src/query.js"]
+    }
   },
   "include": ["runtime/**/*"],
   "exclude": ["node_modules"]

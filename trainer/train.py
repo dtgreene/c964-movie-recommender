@@ -6,6 +6,7 @@ from pathlib import Path
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import normalize
+from collections import Counter, defaultdict
 
 from prep_data import prepare
 
@@ -57,7 +58,7 @@ print("Dataset prep complete.")
 print("Begin training...")
 
 
-text_cols = ["genres", "cast", "director", "writers", "overview"]
+text_cols = ["genres", "director", "writers", "overview"]
 df["text"] = df[text_cols].fillna("").agg(" ".join, axis=1)
 print(f"  Loaded {len(df)} movies.")
 
@@ -112,5 +113,48 @@ with open(out / "vectorizer.pkl", "wb") as f:
 
 with open(out / "svd.pkl", "wb") as f:
     pickle.dump(svd, f)
+
+print("Computing visuals metadata...")
+
+genre_counts = Counter()
+genre_ratings = defaultdict(list)
+
+for _, row in df.iterrows():
+    for g in str(row["genres"]).split():
+        genre = g.replace("_", " ")
+        genre_counts[genre] += 1
+        if pd.notna(row["imdb_rating"]):
+            genre_ratings[genre].append(float(row["imdb_rating"]))
+
+tfidf_sum = np.asarray(tfidf_matrix.sum(axis=0)).flatten()
+feature_names = vectorizer.get_feature_names_out()
+top_indices = np.argsort(tfidf_sum)[-20:][::-1]
+top_tfidf_terms = [
+    {"term": feature_names[i], "score": round(float(tfidf_sum[i]), 2)}
+    for i in top_indices
+]
+
+visuals_meta = {
+    "genre_distribution": [
+        {"genre": g, "count": c}
+        for g, c in sorted(genre_counts.items(), key=lambda x: -x[1])
+    ],
+    "rating_distribution": [
+        {"rating": r, "count": c}
+        for r, c in sorted(
+            Counter(round(float(x) * 2) / 2 for x in df["imdb_rating"].dropna()).items()
+        )
+    ],
+    "avg_rating_by_genre": [
+        {"genre": g, "avg_rating": round(sum(rs) / len(rs), 2)}
+        for g, rs in sorted(
+            genre_ratings.items(), key=lambda x: -(sum(x[1]) / len(x[1]))
+        )
+    ],
+    "top_tfidf_terms": top_tfidf_terms,
+}
+
+with open(out / "visuals_meta.json", "w") as f:
+    json.dump(visuals_meta, f)
 
 print("Training complete.")

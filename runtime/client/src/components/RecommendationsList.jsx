@@ -24,7 +24,7 @@ export const RecommendationsList = ({
         return (
           <div
             key={movie.id}
-            className="border border-zinc-300 shadow-lg shadow-zinc-300 rounded overflow-hidden flex xl:w-146 w-full"
+            className="border border-zinc-300 shadow-lg shadow-zinc-300 rounded overflow-hidden flex xl:w-130 w-full"
           >
             <MoviePoster
               posterPath={movie.poster_path}
