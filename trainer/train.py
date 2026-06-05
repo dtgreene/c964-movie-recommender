@@ -58,7 +58,7 @@ print("Dataset prep complete.")
 print("Begin training...")
 
 
-text_cols = ["genres", "director", "writers", "overview"]
+text_cols = ["genres", "director", "writers", "tagline", "overview"]
 df["text"] = df[text_cols].fillna("").agg(" ".join, axis=1)
 print(f"  Loaded {len(df)} movies.")
 

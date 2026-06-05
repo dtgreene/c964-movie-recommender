@@ -65,17 +65,11 @@ def _build_movie_text(details, credits):
         " ".join(token(m["name"]) for m in cast),
         token(director) if director else "",
         " ".join(token(m["name"]) for m in crew if m.get("department") == "Writing"),
+        details.get("tagline", ""),
         details.get("overview", ""),
     ]
 
     return " ".join(filter(None, parts))
-
-
-def _compute_text_vector(text):
-    tfidf = vectorizer.transform([text])
-    vector = svd.transform(tfidf)
-
-    return normalize(vector)[0]
 
 
 async def _resolve_vector(id):
@@ -86,14 +80,23 @@ async def _resolve_vector(id):
         return vector
 
     # Since this movie wasnt in the training data, we need to fetch the details
-    # to create the text representation + vector.
+    # from TMDb to create the text representation.
     [details, credits] = await asyncio.gather(
         tmdb_get(f"/3/movie/{id}"),
         tmdb_get(f"/3/movie/{id}/credits"),
     )
+    # Important that we build this exactly how the trainer builds the main
+    # dataset. Same columns, transformations, etc.
     text = _build_movie_text(details, credits)
 
-    return _compute_text_vector(text)
+    # Compute this movies vector through the pickled TFIDF and SVD files
+    # produced during the training step.
+    tfidf = vectorizer.transform([text])
+    vector = svd.transform(tfidf)
+    vector = normalize(vector)
+
+    # Extract the first element since this set of vectors only contains one row.
+    return vector[0]
 
 
 def _most_similar(vec, candidate_vectors):
