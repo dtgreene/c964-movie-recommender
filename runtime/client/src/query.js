@@ -3,7 +3,7 @@ import { QueryClient } from '@tanstack/react-query';
 
 export const api = axios.create({
   headers: {
-    'X-API-Key': import.meta.env.VITE_SUPER_SECRET_PASSWORD_OMG,
+    'X-API-User': 'C964',
   },
 });
 

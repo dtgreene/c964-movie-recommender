@@ -1,4 +1,3 @@
-import os
 import json
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -13,14 +12,14 @@ with open(MODEL_DIR / "visuals_meta.json") as f:
     _visuals_meta = json.load(f)
 
 
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+api_user_header = APIKeyHeader(name="X-API-User", auto_error=False)
 
-# Require API requests, except for static files, to provide a "secret" x-api-key
+# Require API requests, except for static files, to provide a "secret" x-api-user
 # header. Again, only a deterrent but easy enough to implement.
 
 
-async def _verify_api_key(key: str = Depends(api_key_header)):
-    if key != os.getenv("API_KEY"):
+async def _verify_api_key(key: str = Depends(api_user_header)):
+    if key != "C964":
         raise HTTPException(status_code=403, detail="Forbidden")
 
 
