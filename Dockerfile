@@ -15,7 +15,7 @@ WORKDIR /app
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock ./
-RUN uv sync
+RUN uv sync --no-group train --no-cache
 
 COPY runtime/server ./runtime/server
 COPY --from=builder /app/runtime/server/public ./runtime/server/public
