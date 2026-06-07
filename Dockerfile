@@ -22,4 +22,4 @@ COPY --from=builder /app/runtime/server/public ./runtime/server/public
 
 
 EXPOSE 5005
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5005", "--app-dir", "runtime/server"]
+CMD ["uv", "run", "--no-sync", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5005", "--app-dir", "runtime/server"]
