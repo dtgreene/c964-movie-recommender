@@ -18,12 +18,12 @@ api_user_header = APIKeyHeader(name="X-API-User", auto_error=False)
 # header. Again, only a deterrent but easy enough to implement.
 
 
-async def _verify_api_key(key: str = Depends(api_user_header)):
+async def _verify_user_header(key: str = Depends(api_user_header)):
     if key != "C964":
         raise HTTPException(status_code=403, detail="Forbidden")
 
 
-router = APIRouter(prefix="/api", dependencies=[Depends(_verify_api_key)])
+router = APIRouter(prefix="/api", dependencies=[Depends(_verify_user_header)])
 
 
 @router.get("/visuals-meta")
