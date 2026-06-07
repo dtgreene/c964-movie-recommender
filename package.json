@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev:client": "vite",
-    "dev:server": "uv run uvicorn main:app --app-dir runtime/server --port 8080",
+    "dev:server": "uv run uvicorn main:app --app-dir runtime/server --port 5005",
     "train": "uv run python -u trainer/train.py",
     "build": "vite build",
     "docker:login": "echo %GITHUB_TOKEN% | docker login ghcr.io -u dtgreene --password-stdin",
