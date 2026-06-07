@@ -7,7 +7,7 @@
     "dev:server": "uv run uvicorn main:app --app-dir runtime/server --port 8080",
     "train": "uv run python -u trainer/train.py",
     "build": "vite build",
-    "docker:build": "docker build -t c964-movie-recommender .",
+    "docker:build": "docker build --build-arg API_KEY=%API_KEY% --build-arg TMDB_READ_ACCESS_TOKEN=%TMDB_READ_ACCESS_TOKEN% -t c964-movie-recommender .",
     "docker:push": "docker tag c964-movie-recommender ghcr.io/dtgreene/c964-movie-recommender:latest && docker push ghcr.io/dtgreene/c964-movie-recommender:latest"
   },
   "license": "ISC",

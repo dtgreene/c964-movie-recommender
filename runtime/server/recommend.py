@@ -52,6 +52,16 @@ def _get_ratings_count(movie_id):
     return m["ratings_count"] if m else None
 
 
+def _get_year(movie_id):
+    m = _movie_data.get(movie_id)
+    return m.get("year") if m else None
+
+
+def _get_language(movie_id):
+    m = _movie_data.get(movie_id)
+    return m.get("language") if m else None
+
+
 def _build_movie_text(details, credits):
     crew = credits.get("crew", [])
     cast = credits.get("cast", [])
@@ -142,6 +152,8 @@ def _rank(
     popular_weight,
     pool_size,
     dislike_weight,
+    min_year,
+    languages,
 ):
     pref = _compute_pref_vector(liked_vectors, disliked_vectors, dislike_weight)
     scores = _movie_matrix @ pref
@@ -151,6 +163,8 @@ def _rank(
             (_movie_ids[i], float(scores[i]))
             for i in range(len(_movie_ids))
             if _movie_ids[i] not in excluded
+            and (min_year is None or (_get_year(_movie_ids[i]) or 0) >= min_year)
+            and (not languages or _get_language(_movie_ids[i]) in languages)
         ),
         key=lambda x: -x[1],
     )[:pool]
@@ -189,6 +203,8 @@ async def get_recommendations(
     popular_weight=0.0,
     pool_size=0.0,
     dislike_weight=0.0,
+    min_year=None,
+    languages=None,
 ):
     all_ids = list(dict.fromkeys([*liked_ids, *disliked_ids]))
     all_vectors = dict(
@@ -207,6 +223,8 @@ async def get_recommendations(
         popular_weight,
         pool_size,
         dislike_weight,
+        min_year,
+        languages,
     )
 
     rec_vectors = [_get_vector(id) for id, _ in top]

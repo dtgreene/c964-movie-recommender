@@ -37,7 +37,7 @@ const TabButton = ({ children, onClick, isActive, className }) => (
   <button
     onClick={onClick}
     className={cn(
-      'text-nowrap cursor-pointer w-1/4 p-2 flex justify-center items-center gap-2 border-2 rounded-full transition-colors hover:bg-zinc-100 border-zinc-200',
+      'text-nowrap cursor-pointer w-1/4 p-2 flex justify-center items-center gap-2 border-2 rounded-full transition-colors hover:bg-zinc-100 border-zinc-300',
       {
         'border-sky-600 text-sky-600': isActive,
       },
@@ -51,7 +51,7 @@ const TabButton = ({ children, onClick, isActive, className }) => (
 export const Home = () => {
   const userSnap = useSnapshot(userState);
   const { liked, disliked } = groupByRating(userSnap.myStuff);
-  const hasMinLiked = liked.length >= 5;
+  const hasMinLiked = liked.length > 0;
   const borderBeamActive = useTimedFlag(hasMinLiked);
 
   const [searchParams, setSearchParams] = useSearchParams();

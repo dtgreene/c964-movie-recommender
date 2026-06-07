@@ -46,8 +46,8 @@ poster_path
 """
 
 TFIDF_MAX_FEATURES = 15000
-TFIDF_MAX_DF = 0.7
-SVD_N_COMPONENTS = 500
+TFIDF_MAX_DF = 0.3
+SVD_N_COMPONENTS = 300
 
 SCRIPT_DIR = Path(__file__).parent
 
@@ -64,7 +64,11 @@ print(f"  Loaded {len(df)} movies.")
 
 print("  Fitting TF-IDF vectorizer...")
 vectorizer = TfidfVectorizer(
-    max_features=TFIDF_MAX_FEATURES, stop_words="english", max_df=TFIDF_MAX_DF
+    max_features=TFIDF_MAX_FEATURES,
+    stop_words="english",
+    max_df=TFIDF_MAX_DF,
+    # min_df=TFIDF_MIN_DF,
+    # ngram_range=(1, 3),
 )
 tfidf_matrix = vectorizer.fit_transform(df["text"])
 print(
@@ -90,9 +94,12 @@ movie_meta = {
             "rating": round(float(r), 1) if pd.notna(r) else None,
             "popularity": round(float(p), 3) if pd.notna(p) else None,
             "ratings_count": int(c) if pd.notna(c) else None,
+            "year": int(str(d)[:4]) if pd.notna(d) and len(str(d)) >= 4 else None,
+            "language": str(lang) if pd.notna(lang) else None,
         }
-        for id, r, p, c in zip(
-            df["id"], df["imdb_rating"], df["popularity"], df["imdb_votes"]
+        for id, r, p, c, d, lang in zip(
+            df["id"], df["imdb_rating"], df["popularity"], df["imdb_votes"],
+            df["release_date"], df["original_language"]
         )
     },
 }

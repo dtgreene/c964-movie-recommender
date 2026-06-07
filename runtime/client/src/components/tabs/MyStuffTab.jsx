@@ -61,20 +61,22 @@ export const MyStuffTab = ({ isActive, onTabChange }) => {
           )}
         </div>
 
-        <div>
-          <div className="text-2xl mb-2">Your Top Terms</div>
-          {isPending ? (
-            <div className="flex justify-center my-8">
-              <div className="loader" />
-            </div>
-          ) : (
-            <div className="flex flex-col items-center">
-              {topTerms?.map(({ term }) => (
-                <div key={term}>{term}</div>
-              ))}
-            </div>
-          )}
-        </div>
+        {liked.length > 0 && (
+          <div>
+            <div className="text-2xl mb-2">Your Top Terms</div>
+            {isPending ? (
+              <div className="flex justify-center my-8">
+                <div className="loader" />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                {topTerms?.map(({ term }) => (
+                  <div key={term}>{term}</div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

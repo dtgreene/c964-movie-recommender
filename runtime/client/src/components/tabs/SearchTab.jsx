@@ -40,7 +40,7 @@ export const SearchTab = ({ isActive }) => {
           <input
             type="text"
             placeholder="Search movies by title"
-            className="border border-zinc-400 rounded-full px-4 py-2 w-full"
+            className="border border-zinc-300 rounded-full px-4 py-2 w-full"
           />
           <button
             type="submit"

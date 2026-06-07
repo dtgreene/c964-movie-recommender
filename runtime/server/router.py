@@ -69,10 +69,12 @@ async def recommendations(
     tmdb_popular_weight: float = Query(default=0.0, ge=0.0, le=1.0),
     pool_size: float = Query(default=0.0, ge=0.0, le=1.0),
     dislike_weight: float = Query(default=0.0, ge=0.0, le=1.0),
+    min_year: int = Query(default=None, ge=1900, le=2100),
+    languages: list[str] = Query(default=[]),
 ):
-    if len(liked) < 5:
+    if len(liked) < 1:
         raise HTTPException(
-            status_code=400, detail="At least 5 liked movies are required."
+            status_code=400, detail="At least one liked movie is required."
         )
 
     return await get_recommendations(
@@ -82,4 +84,6 @@ async def recommendations(
         tmdb_popular_weight,
         pool_size,
         dislike_weight,
+        min_year,
+        languages,
     )

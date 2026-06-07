@@ -20,5 +20,11 @@ RUN uv sync
 COPY runtime/server ./runtime/server
 COPY --from=builder /app/runtime/server/public ./runtime/server/public
 
+ARG API_KEY
+ARG TMDB_READ_ACCESS_TOKEN
+
+ENV API_KEY=$API_KEY
+ENV TMDB_READ_ACCESS_TOKEN=$TMDB_READ_ACCESS_TOKEN
+
 EXPOSE 8080
 CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--app-dir", "runtime/server"]
