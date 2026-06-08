@@ -8,6 +8,8 @@ from router import router
 
 load_dotenv()
 
+PUBLIC_DIR = Path(__file__).parent / "public"
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -19,6 +21,6 @@ app.add_middleware(
 app.include_router(router)
 app.mount(
     "/",
-    StaticFiles(directory=str(Path(__file__).parent / "public"), html=True),
+    StaticFiles(directory=str(PUBLIC_DIR, html=True)),
     name="static",
 )

@@ -15,11 +15,11 @@ WORKDIR /app
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock ./
-RUN uv sync --no-dev --no-cache
+RUN uv sync
 
 COPY runtime/server ./runtime/server
 COPY --from=builder /app/runtime/server/public ./runtime/server/public
 
 
 EXPOSE 5005
-CMD ["uv", "run", "--no-sync", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5005", "--app-dir", "runtime/server"]
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5005", "--app-dir", "runtime/server"]
