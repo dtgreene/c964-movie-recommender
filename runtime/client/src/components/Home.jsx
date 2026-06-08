@@ -1,5 +1,6 @@
 import { Fragment } from 'react';
 import {
+  BadgeQuestionMarkIcon,
   BookmarkIcon,
   ChartNoAxesColumnIncreasingIcon,
   SearchIcon,
@@ -7,7 +8,8 @@ import {
 } from 'lucide-react';
 import { BorderBeam } from 'border-beam';
 import { useSnapshot } from 'valtio';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
+import { Tooltip } from 'react-tooltip';
 
 import { cn, useTimedFlag } from 'utils';
 import { userState, groupByRating } from 'store';
@@ -37,7 +39,7 @@ const TabButton = ({ children, onClick, isActive, className }) => (
   <button
     onClick={onClick}
     className={cn(
-      'text-nowrap cursor-pointer w-1/4 p-2 flex justify-center items-center gap-2 border-2 rounded-full transition-colors hover:bg-zinc-100 border-zinc-300',
+      'text-nowrap cursor-pointer w-full p-2 flex justify-center items-center gap-2 border-2 rounded-full transition-colors hover:bg-zinc-100 border-zinc-300',
       {
         'border-sky-600 text-sky-600': isActive,
       },
@@ -99,7 +101,7 @@ export const Home = () => {
             </div>
           )}
         </TabButton>
-        <BorderBeam className="w-1/4" active={borderBeamActive}>
+        <BorderBeam className="w-full" active={borderBeamActive}>
           <TabButton
             onClick={() => handleTabChange(Tabs.RECOMMENDATIONS)}
             isActive={tab === Tabs.RECOMMENDATIONS}
@@ -109,6 +111,21 @@ export const Home = () => {
             <span>Recommendations</span>
           </TabButton>
         </BorderBeam>
+        <div
+          data-tooltip-id="info-attr"
+          className="flex items-center text-zinc-500"
+        >
+          <BadgeQuestionMarkIcon size="28" />
+        </div>
+        <Tooltip id="info-attr" place="top" className="max-w-100 z-10">
+          <div className="flex flex-col items-center gap-2">
+            <img src="tmdb_logo.svg" alt="TMDB Logo" className="w-40" />
+            <div className="max-w-80 text-center">
+              This product uses the TMDB API but is not endorsed or certified by
+              TMDB.
+            </div>
+          </div>
+        </Tooltip>
       </div>
       <div className="flex justify-center">
         <TabPanel
