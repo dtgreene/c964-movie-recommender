@@ -36,7 +36,7 @@ export const PopularTab = ({ isActive }) => {
       />
       <div className="mt-6 w-full">
         <QueryState isLoading={isPending} error={error}>
-          <MovieGrid data={data} noResultsMessage="Nothing found!" />
+          <MovieGrid data={data} />
         </QueryState>
       </div>
     </div>

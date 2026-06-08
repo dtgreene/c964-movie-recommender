@@ -1,26 +1,80 @@
-import { ImageOffIcon } from 'lucide-react';
 import { useState } from 'react';
+import { ImageOffIcon, ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
+import { useSnapshot } from 'valtio';
 
-export const MoviePoster = ({ posterPath, className }) => {
-  const [imgSrc, setImgSrc] = useState(
-    posterPath ? `http://image.tmdb.org/t/p/w300${posterPath}` : null,
-  );
+import { userState } from 'store';
+import { cn } from 'utils';
 
-  if (imgSrc) {
-    return (
-      <img
-        src={imgSrc}
-        onError={() => setImgSrc(null)}
-        className={className}
-        alt="Movie poster"
-      />
-    );
+const PosterImage = ({ src, onError }) => {
+  if (src) {
+    return <img src={src} onError={() => setImgSrc(null)} alt="Movie poster" />;
   }
 
   return (
-    <div className={className}>
-      <div className="flex justify-center items-center h-full">
-        <ImageOffIcon className="text-zinc-300" size="128" />
+    <div className="flex justify-center items-center h-full">
+      <ImageOffIcon className="text-zinc-300" size="128" />
+    </div>
+  );
+};
+
+export const MoviePoster = ({ movie, className }) => {
+  const { id, title, release_date, poster_path } = movie;
+  const userSnap = useSnapshot(userState);
+  const [imgSrc, setImgSrc] = useState(
+    poster_path ? `http://image.tmdb.org/t/p/w300${poster_path}` : null,
+  );
+
+  const isLiked = userSnap.myStuff[id]?.rating === 'liked';
+  const isDisliked = userSnap.myStuff[id]?.rating === 'disliked';
+
+  const handleThumbsUp = () => {
+    if (!isLiked) {
+      userState.myStuff[id] = {
+        rating: 'liked',
+        movie,
+      };
+    } else {
+      delete userState.myStuff[id];
+    }
+  };
+
+  const handleThumbsDown = () => {
+    if (!isDisliked) {
+      userState.myStuff[id] = {
+        rating: 'disliked',
+        movie,
+      };
+    } else {
+      delete userState.myStuff[id];
+    }
+  };
+
+  return (
+    <div className={cn('aspect-2/3 shrink-0 relative group', className)}>
+      <PosterImage src={imgSrc} onError={() => setImgSrc(null)} />
+      {isLiked && (
+        <div className="absolute bottom-0 bg-emerald-500 w-full text-white p-1 text-center font-bold">
+          LIKED
+        </div>
+      )}
+      {isDisliked && (
+        <div className="absolute bottom-0 bg-rose-500 w-full text-white p-1 text-center font-bold">
+          DISLIKED
+        </div>
+      )}
+      <div className="absolute right-0 top-0 p-2 flex flex-col gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+        <button
+          onClick={handleThumbsUp}
+          className="bg-emerald-500/75 hover:bg-emerald-500 text-white rounded-full p-3 not-disabled:cursor-pointer transition-colors"
+        >
+          <ThumbsUpIcon size="24" />
+        </button>
+        <button
+          onClick={handleThumbsDown}
+          className="bg-rose-500/75 hover:bg-rose-500 text-white rounded-full p-3 not-disabled:cursor-pointer transition-colors"
+        >
+          <ThumbsDownIcon size="24" />
+        </button>
       </div>
     </div>
   );

@@ -1,6 +1,8 @@
 import asyncio
 import json
+import logging
 import pickle
+import time
 import numpy as np
 from pathlib import Path
 from sklearn.preprocessing import normalize
@@ -8,6 +10,7 @@ from sklearn.preprocessing import normalize
 from tmdb import tmdb_get
 
 MODEL_DIR = Path(__file__).parent / "./model"
+RECOMMENDATION_SIZE = 10
 
 with open(MODEL_DIR / "metadata.json") as f:
     meta = json.load(f)
@@ -172,7 +175,7 @@ def _rank(
     if imdb_weight > 0 or popular_weight > 0:
         candidates = _rank_weighted(candidates, imdb_weight, popular_weight)
 
-    return pref, candidates[:10]
+    return candidates[:RECOMMENDATION_SIZE]
 
 
 def _infer_top_terms(pref, n=15):
@@ -215,7 +218,8 @@ async def get_recommendations(
     disliked_vectors = [all_vectors[id] for id in disliked_ids]
     excluded = set(liked_ids) | set(disliked_ids)
 
-    pref, top = _rank(
+    t0 = time.perf_counter()
+    top = _rank(
         liked_vectors,
         disliked_vectors,
         excluded,
@@ -225,6 +229,9 @@ async def get_recommendations(
         dislike_weight,
         min_year,
         languages,
+    )
+    logging.getLogger("uvicorn.error").info(
+        "Recommendation rank completed in %.1f ms", (time.perf_counter() - t0) * 1000
     )
 
     rec_vectors = [_get_vector(id) for id, _ in top]

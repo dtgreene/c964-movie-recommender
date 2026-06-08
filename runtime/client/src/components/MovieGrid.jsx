@@ -1,15 +1,15 @@
 import { cn } from 'utils';
-import { MovieCard } from './MovieCard';
+import { MovieCardSlim } from './MovieCardSlim';
 
-export const MovieGrid = ({ data, noResultsMessage, disableRating }) => {
+export const MovieGrid = ({
+  data,
+  noResultsMessage = 'Nothing found!',
+  disableRating,
+}) => {
   const hasResults = data && data.length > 0;
 
   if (!hasResults) {
-    if (noResultsMessage) {
-      return <div className="my-8">{noResultsMessage}</div>;
-    }
-
-    return null;
+    return <div className="my-8">{noResultsMessage}</div>;
   }
 
   return (
@@ -19,7 +19,11 @@ export const MovieGrid = ({ data, noResultsMessage, disableRating }) => {
       })}
     >
       {data?.map((movie) => (
-        <MovieCard key={movie.id} movie={movie} disableRating={disableRating} />
+        <MovieCardSlim
+          key={movie.id}
+          movie={movie}
+          disableRating={disableRating}
+        />
       ))}
     </div>
   );

@@ -26,10 +26,7 @@ export const RecommendationsList = ({
             key={movie.id}
             className="border border-zinc-300 shadow-lg shadow-zinc-300 rounded overflow-hidden flex xl:w-130 w-full"
           >
-            <MoviePoster
-              posterPath={movie.poster_path}
-              className="w-44 aspect-2/3 shrink-0"
-            />
+            <MoviePoster movie={movie} className="w-44" />
             <div className="p-4 flex flex-col gap-2">
               <div>
                 <a

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { api } from 'query';
 import { groupByRating, userState } from 'store';
-import { MovieCard } from '../MovieCard';
+import { MovieCardSlim } from '../MovieCardSlim';
 import { BrowseSuggestion } from '../BrowseSuggestion';
 
 export const MyStuffTab = ({ isActive, onTabChange }) => {
@@ -44,7 +44,7 @@ export const MyStuffTab = ({ isActive, onTabChange }) => {
               <div className="text-2xl mb-2">Liked</div>
               <div className="flex flex-wrap gap-4">
                 {liked.map((movie) => (
-                  <MovieCard key={movie.id} movie={movie} />
+                  <MovieCardSlim key={movie.id} movie={movie} />
                 ))}
               </div>
             </div>
@@ -54,7 +54,7 @@ export const MyStuffTab = ({ isActive, onTabChange }) => {
               <div className="text-2xl mb-2">Disliked</div>
               <div className="flex flex-wrap gap-4">
                 {disliked.map((movie) => (
-                  <MovieCard key={movie.id} movie={movie} />
+                  <MovieCardSlim key={movie.id} movie={movie} />
                 ))}
               </div>
             </div>
