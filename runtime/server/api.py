@@ -23,35 +23,35 @@ async def _verify_user_header(key: str = Depends(api_user_header)):
         raise HTTPException(status_code=403, detail="Forbidden")
 
 
-router = APIRouter(prefix="/api", dependencies=[Depends(_verify_user_header)])
+api_router = APIRouter(prefix="/api", dependencies=[Depends(_verify_user_header)])
 
 
-@router.get("/visuals-meta")
+@api_router.get("/visuals-meta")
 async def visuals_meta():
     return _visuals_meta
 
 
-@router.get("/search")
+@api_router.get("/search")
 async def search(query: str, page: int = 1):
     return await tmdb_get("/3/search/movie", {"query": query, "page": page})
 
 
-@router.get("/top_rated")
+@api_router.get("/top_rated")
 async def top_rated(page: int = 1):
     return await tmdb_get("/3/movie/top_rated", {"page": page})
 
 
-@router.get("/trending")
+@api_router.get("/trending")
 async def trending(page: int = 1):
     return await tmdb_get("/3/movie/popular", {"page": page})
 
 
-@router.get("/movie/{movie_id}")
+@api_router.get("/movie/{movie_id}")
 async def movie(movie_id: int):
     return await tmdb_get(f"/3/movie/{movie_id}")
 
 
-@router.get("/taste")
+@api_router.get("/taste")
 async def taste(liked: list[int] = Query(default=[])):
     if not liked:
         raise HTTPException(
@@ -60,7 +60,7 @@ async def taste(liked: list[int] = Query(default=[])):
     return await get_taste(liked)
 
 
-@router.get("/recommendations")
+@api_router.get("/recommendations")
 async def recommendations(
     liked: list[int] = Query(default=[]),
     disliked: list[int] = Query(default=[]),

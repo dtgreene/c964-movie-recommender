@@ -2,9 +2,10 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from router import router
+from api import api_router
 
 load_dotenv()
 
@@ -18,9 +19,19 @@ app.add_middleware(
     allow_methods=["GET"],
     allow_headers=["*"],
 )
-app.include_router(router)
+app.include_router(api_router)
 app.mount(
-    "/",
-    StaticFiles(directory=PUBLIC_DIR, html=True),
-    name="static",
+    "/assets",
+    StaticFiles(directory=PUBLIC_DIR / "assets"),
+    name="assets",
 )
+
+
+@app.get("/{full_path:path}")
+async def spa_fallback(full_path: str):
+    file = PUBLIC_DIR / full_path
+
+    if file.is_file():
+        return FileResponse(file)
+
+    return FileResponse(PUBLIC_DIR / "index.html")
