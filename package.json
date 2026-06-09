@@ -6,6 +6,7 @@
     "dev:client": "vite",
     "dev:server": "uv run uvicorn main:app --app-dir runtime/server --port 5005",
     "train": "uv run python -u trainer/train.py",
+    "test": "uv run python -u tests/genre_coherence.py",
     "build": "vite build",
     "docker:login": "echo %GITHUB_TOKEN% | docker login ghcr.io -u dtgreene --password-stdin",
     "docker:build": "docker build -t c964-movie-recommender .",

@@ -96,13 +96,22 @@ movie_meta = {
             "ratings_count": int(c) if pd.notna(c) else None,
             "year": int(str(d)[:4]) if pd.notna(d) and len(str(d)) >= 4 else None,
             "language": str(lang) if pd.notna(lang) else None,
+            "genres": [g.replace("_", " ") for g in str(g_raw).split()]
+            if pd.notna(g_raw)
+            else [],
         }
-        for id, r, p, c, d, lang in zip(
-            df["id"], df["imdb_rating"], df["popularity"], df["imdb_votes"],
-            df["release_date"], df["original_language"]
+        for id, r, p, c, d, lang, g_raw in zip(
+            df["id"],
+            df["imdb_rating"],
+            df["popularity"],
+            df["imdb_votes"],
+            df["release_date"],
+            df["original_language"],
+            df["genres"],
         )
     },
 }
+
 with open(out / "movie_meta.json", "w") as f:
     json.dump(movie_meta, f)
 
