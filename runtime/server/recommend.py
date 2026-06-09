@@ -65,19 +65,20 @@ def _get_language(movie_id):
     return m.get("language") if m else None
 
 
+def _token(name):
+    return name.replace(" ", "_")
+
+
 def _build_movie_text(details, credits):
     crew = credits.get("crew", [])
     cast = credits.get("cast", [])
 
-    def token(name):
-        return name.replace(" ", "_")
-
     director = next((m["name"] for m in crew if m.get("job") == "Director"), None)
     parts = [
-        " ".join(token(g["name"]) for g in details.get("genres", [])),
-        " ".join(token(m["name"]) for m in cast),
-        token(director) if director else "",
-        " ".join(token(m["name"]) for m in crew if m.get("department") == "Writing"),
+        " ".join(_token(g["name"]) for g in details.get("genres", [])),
+        " ".join(_token(m["name"]) for m in cast),
+        _token(director) if director else "",
+        " ".join(_token(m["name"]) for m in crew if m.get("department") == "Writing"),
         details.get("tagline", ""),
         details.get("overview", ""),
     ]
@@ -92,8 +93,8 @@ async def _resolve_vector(id):
     if vector is not None:
         return vector
 
-    # Since this movie wasnt in the training data, we need to fetch the details
-    # from TMDb to create the text representation.
+    # Since this movie was not in the training data, we need to fetch the
+    # details from TMDb to create the text representation.
     [details, credits] = await asyncio.gather(
         tmdb_get(f"/3/movie/{id}"),
         tmdb_get(f"/3/movie/{id}/credits"),
